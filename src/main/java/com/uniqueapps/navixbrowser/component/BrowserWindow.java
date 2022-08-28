@@ -2,6 +2,7 @@ package com.uniqueapps.navixbrowser.component;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -15,7 +16,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -28,7 +33,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
@@ -59,8 +67,15 @@ public class BrowserWindow extends JFrame {
     private final JButton backwardNav;
     private final JButton reloadButton;
     private final JButton addTabButton;
+    private final JButton addBookmarkButton;
     private final BrowserTabbedPane tabbedPane;
     public boolean browserIsInFocus = false;
+
+    File cache = new File(".", "cache");
+
+    File bookmarkFile = new File(cache, "bookmarks");
+    private final Map<String, String> bookmarks = new HashMap<>();
+    JPanel bookmarksPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
 
     public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent)
             throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
@@ -70,8 +85,7 @@ public class BrowserWindow extends JFrame {
             downloadWindow = new RuntimeDownloadWindow();
             downloadWindow.setVisible(true);
         }
-        
-        File cache = new File(".", "cache");
+
         cache.mkdirs();
 
         File resources = new File(".", "resources");
@@ -99,6 +113,14 @@ public class BrowserWindow extends JFrame {
             downloadWindow.setVisible(false);
         }
 
+        bookmarkFile.createNewFile();
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(bookmarkFile))) {
+            bookmarks.putAll((HashMap<String, String>) ois.readObject());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         try {
             setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
         } catch (IOException e) {
@@ -110,6 +132,7 @@ public class BrowserWindow extends JFrame {
         forwardNav = new JButton();
         reloadButton = new JButton();
         addTabButton = new JButton();
+        addBookmarkButton = new JButton();
         browserAddressField = new JTextField(100) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -193,11 +216,13 @@ public class BrowserWindow extends JFrame {
         forwardNav.setBorder(new EmptyBorder(0, 0, 0, 0));
         reloadButton.setBorder(new EmptyBorder(0, 0, 0, 0));
         addTabButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+        addBookmarkButton.setBorder(new EmptyBorder(0, 0, 0, 0));
         homeButton.setBackground(this.getBackground());
         backwardNav.setBackground(this.getBackground());
         forwardNav.setBackground(this.getBackground());
         reloadButton.setBackground(this.getBackground());
         addTabButton.setBackground(this.getBackground());
+        addBookmarkButton.setBackground(this.getBackground());
 
         try {
             homeButton.setIcon(new ImageIcon(
@@ -214,6 +239,9 @@ public class BrowserWindow extends JFrame {
                             .getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
             addTabButton.setIcon(new ImageIcon(
                     ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/add.png")))
+                            .getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
+            addBookmarkButton.setIcon(new ImageIcon(
+                    ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/bookmark.png")))
                             .getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -233,6 +261,14 @@ public class BrowserWindow extends JFrame {
         reloadButton.addActionListener(
                 l -> tabbedPane.getSelectedBrowser().loadURL(tabbedPane.getSelectedBrowser().getURL()));
         addTabButton.addActionListener(l -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
+        addBookmarkButton.addActionListener(l -> {
+            String name = JOptionPane.showInputDialog("Bookmark name", "New Bookmark");
+            String url = JOptionPane.showInputDialog("URL", tabbedPane.getSelectedBrowser().getURL());
+            if (url != null && name != null) {
+                bookmarks.put(name, url);
+                refreshBookmarks();
+            }
+        });
 
         JPanel separatorPanel = new JPanel() {
             @Override
@@ -243,6 +279,55 @@ public class BrowserWindow extends JFrame {
         };
 
         JPanel navBar = new JPanel(new GridBagLayout());
+
+        bookmarksPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON3) {
+                    JPopupMenu popup = new JPopupMenu();
+                    JMenuItem addBookmark = new JMenuItem("Add Bookmark");
+                    addBookmark.addActionListener(l -> {
+                        String name = JOptionPane.showInputDialog("Bookmark name", "New Bookmark");
+                        String url = JOptionPane.showInputDialog("URL", tabbedPane.getSelectedBrowser().getURL());
+                        if (url != null && name != null) {
+                            bookmarks.put(name, url);
+                            refreshBookmarks();
+                        }
+                    });
+                    popup.add(addBookmark);
+                    popup.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
+        for (var bookmark : bookmarks.entrySet()) {
+            JButton bookmarkButton = new JButton(bookmark.getKey()) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    super.paintComponent(g2d);
+                }
+            };
+            bookmarkButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+            bookmarkButton.setBackground(this.getBackground());
+            bookmarkButton.addActionListener(l -> tabbedPane.getSelectedBrowser().loadURL(bookmark.getValue()));
+            bookmarkButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getButton() == MouseEvent.BUTTON3) {
+                        JPopupMenu popup = new JPopupMenu();
+                        JMenuItem removeBookmark = new JMenuItem("Remove Bookmark");
+                        removeBookmark.addActionListener(l -> {
+                            bookmarks.remove(bookmark.getKey());
+                            refreshBookmarks();
+                        });
+                        popup.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                }
+            });
+            bookmarksPanel.add(bookmarkButton);
+        }
+
         GridBagConstraints gbc = new GridBagConstraints();
 
         gbc.insets = new Insets(5, 3, 8, 3);
@@ -277,7 +362,49 @@ public class BrowserWindow extends JFrame {
         gbc.fill = GridBagConstraints.BOTH;
         navBar.add(browserAddressField, gbc);
 
+        gbc.gridx = 7;
+        gbc.weightx = 0.1;
+        navBar.add(addBookmarkButton, gbc);
+
         getContentPane().add(navBar, BorderLayout.NORTH);
         getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        getContentPane().add(bookmarksPanel, BorderLayout.SOUTH);
+    }
+
+    private void refreshBookmarks() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(bookmarkFile))) {
+            oos.writeObject(bookmarks);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        bookmarksPanel.removeAll();
+        for (var bookmark : bookmarks.entrySet()) {
+            JButton bookmarkButton = new JButton(bookmark.getKey()) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    super.paintComponent(g2d);
+                }
+            };
+            bookmarkButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+            bookmarkButton.setBackground(this.getBackground());
+            bookmarkButton.addActionListener(l -> tabbedPane.getSelectedBrowser().loadURL(bookmark.getValue()));
+            bookmarkButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getButton() == MouseEvent.BUTTON3) {
+                        JPopupMenu popup = new JPopupMenu();
+                        JMenuItem removeBookmark = new JMenuItem("Remove Bookmark");
+                        removeBookmark.addActionListener(l -> {
+                            bookmarks.remove(bookmark.getKey());
+                            refreshBookmarks();
+                        });
+                        popup.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                }
+            });
+            bookmarksPanel.add(bookmarkButton);
+        }
     }
 }

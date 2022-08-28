@@ -1,12 +1,12 @@
 package com.uniqueapps.navixbrowser.handler;
 
+import java.io.File;
+
 import org.cef.browser.CefBrowser;
 import org.cef.callback.CefBeforeDownloadCallback;
 import org.cef.callback.CefDownloadItem;
 import org.cef.callback.CefDownloadItemCallback;
 import org.cef.handler.CefDownloadHandlerAdapter;
-
-import java.io.File;
 
 public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 
