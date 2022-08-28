@@ -104,6 +104,7 @@ public class BrowserWindow extends JFrame {
         builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/0.5";
         builder.getCefSettings().user_agent_product = "Navix 0.5";
         builder.getCefSettings().cache_path = cache.getAbsolutePath();
+        builder.addJcefArgs("--disable-gpu");
         builder.setAppHandler(new NavixAppHandler());
 
         cefApp = builder.build();
@@ -398,7 +399,6 @@ public class BrowserWindow extends JFrame {
                         JMenuItem removeBookmark = new JMenuItem("Remove Bookmark");
                         removeBookmark.addActionListener(l -> {
                             bookmarks.remove(bookmark.getKey());
-                            refreshBookmarks();
                         });
                         popup.show(e.getComponent(), e.getX(), e.getY());
                     }
@@ -406,5 +406,7 @@ public class BrowserWindow extends JFrame {
             });
             bookmarksPanel.add(bookmarkButton);
         }
+        this.setVisible(false);
+        this.setVisible(true);
     }
 }

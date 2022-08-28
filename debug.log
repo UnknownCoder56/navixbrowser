@@ -1,0 +1,69 @@
+[0828/153932.317:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Error) eglCreateContext: Requested GLES version (3.0) is greater than max supported (2, 0).
+[0828/153932.318:ERROR:gl_context_egl.cc(358)] eglCreateContext failed with error EGL_SUCCESS
+[0828/153932.336:ERROR:angle_platform_impl.cc(43)] Display.cpp:992 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/153932.336:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/153932.337:ERROR:gl_surface_egl.cc(1353)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0828/153932.337:ERROR:gl_initializer_win.cc(134)] GLSurfaceEGL::InitializeOneOff failed.
+[0828/153932.346:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0828/153932.917:ERROR:angle_platform_impl.cc(43)] Display.cpp:992 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/153932.918:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/153932.918:ERROR:gl_surface_egl.cc(1353)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0828/153932.918:ERROR:gl_initializer_win.cc(134)] GLSurfaceEGL::InitializeOneOff failed.
+[0828/153932.927:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0828/153933.257:ERROR:gpu_init.cc(486)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0828/154050.948:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154050.949:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154051.669:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154051.676:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154051.683:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154051.689:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154052.202:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154052.207:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154052.598:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154052.598:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154052.619:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = , status = 4, exit_code = 258
+[0828/154053.058:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154053.068:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154053.075:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154053.489:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154053.497:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154053.868:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154056.888:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154056.911:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154056.944:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154056.959:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154056.959:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/154056.975:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/211427.618:ERROR:angle_platform_impl.cc(43)] Display.cpp:992 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/211427.619:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/211427.619:ERROR:gl_surface_egl.cc(1353)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0828/211427.619:ERROR:gl_initializer_win.cc(134)] GLSurfaceEGL::InitializeOneOff failed.
+[0828/211427.643:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0828/211429.257:ERROR:gpu_init.cc(486)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0828/211633.971:ERROR:angle_platform_impl.cc(43)] Display.cpp:992 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/211633.972:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/211633.972:ERROR:gl_surface_egl.cc(1353)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0828/211633.973:ERROR:gl_initializer_win.cc(134)] GLSurfaceEGL::InitializeOneOff failed.
+[0828/211634.082:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0828/211634.854:ERROR:gpu_init.cc(486)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0828/211900.808:ERROR:angle_platform_impl.cc(43)] Display.cpp:992 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/211900.808:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/211900.808:ERROR:gl_surface_egl.cc(1353)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0828/211900.808:ERROR:gl_initializer_win.cc(134)] GLSurfaceEGL::InitializeOneOff failed.
+[0828/211900.817:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0828/211901.022:ERROR:gpu_init.cc(486)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0828/211928.222:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/212150.630:ERROR:angle_platform_impl.cc(43)] Display.cpp:992 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/212150.631:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/212150.631:ERROR:gl_surface_egl.cc(1353)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0828/212150.631:ERROR:gl_initializer_win.cc(134)] GLSurfaceEGL::InitializeOneOff failed.
+[0828/212150.641:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0828/212150.892:ERROR:gpu_init.cc(486)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0828/212246.398:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
+[0828/212445.473:ERROR:angle_platform_impl.cc(43)] Display.cpp:992 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/212445.474:ERROR:gl_surface_egl.cc(831)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1317.
+[0828/212445.474:ERROR:gl_surface_egl.cc(1353)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0828/212445.474:ERROR:gl_initializer_win.cc(134)] GLSurfaceEGL::InitializeOneOff failed.
+[0828/212445.484:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0828/212445.943:ERROR:gpu_init.cc(486)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0828/212502.557:INFO:render_frame_host_impl.cc(11654)] RenderFrameHostImpl::MaybeGenerateCrashReport url = file:///C:/Users/Arpan/navixbrowser/resources/newtab.html, status = 4, exit_code = 258
