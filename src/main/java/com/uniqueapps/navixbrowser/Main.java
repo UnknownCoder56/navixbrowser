@@ -18,6 +18,7 @@ public class Main {
 			var window = new BrowserWindow("navix://home", false, false);
 			window.setSize(600, 400);
 			window.setTitle("Navix");
+			window.setLocationRelativeTo(null);
 			window.setVisible(true);
 		} catch (UnsupportedLookAndFeelException | IOException | UnsupportedPlatformException | InterruptedException | CefInitializationException e) {
 			e.printStackTrace();

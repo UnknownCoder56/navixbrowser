@@ -1,20 +1,14 @@
 package com.uniqueapps.navixbrowser.component;
 
-import me.friwi.jcefmaven.CefAppBuilder;
-import me.friwi.jcefmaven.CefInitializationException;
-import me.friwi.jcefmaven.UnsupportedPlatformException;
-
-import org.cef.CefApp;
-import org.cef.CefClient;
-
-import com.uniqueapps.navixbrowser.handler.*;
-import com.uniqueapps.navixbrowser.listener.NavixComponentListener;
-import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
+import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -28,6 +22,31 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+
+import org.cef.CefApp;
+import org.cef.CefClient;
+
+import com.uniqueapps.navixbrowser.handler.NavixAppHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDownloadHandler;
+import com.uniqueapps.navixbrowser.handler.NavixFocusHandler;
+import com.uniqueapps.navixbrowser.handler.NavixLoadHandler;
+import com.uniqueapps.navixbrowser.listener.NavixComponentListener;
+import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
+
+import me.friwi.jcefmaven.CefAppBuilder;
+import me.friwi.jcefmaven.CefInitializationException;
+import me.friwi.jcefmaven.UnsupportedPlatformException;
 
 public class BrowserWindow extends JFrame {
 
@@ -45,15 +64,24 @@ public class BrowserWindow extends JFrame {
 
     public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent)
             throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
+
+        RuntimeDownloadWindow downloadWindow = null;
+        if (!new File(".", "jcef-bundle").exists()) {
+            downloadWindow = new RuntimeDownloadWindow();
+            downloadWindow.setVisible(true);
+        }
         
         File cache = new File(".", "cache");
         cache.mkdirs();
 
         File resources = new File(".", "resources");
         if (resources.mkdirs()) {
-            Files.copy(getClass().getResourceAsStream("/resources/navix.ico"), new File(new File(".", "resources"), "navix.ico").toPath());
-            Files.copy(getClass().getResourceAsStream("/resources/newtab.html"), new File(new File(".", "resources"), "newtab.html").toPath());
-            Files.copy(getClass().getResourceAsStream("/resources/style.css"), new File(new File(".", "resources"), "style.css").toPath());
+            Files.copy(getClass().getResourceAsStream("/resources/navix.ico"),
+                    new File(new File(".", "resources"), "navix.ico").toPath());
+            Files.copy(getClass().getResourceAsStream("/resources/newtab.html"),
+                    new File(new File(".", "resources"), "newtab.html").toPath());
+            Files.copy(getClass().getResourceAsStream("/resources/style.css"),
+                    new File(new File(".", "resources"), "style.css").toPath());
         }
 
         CefAppBuilder builder = new CefAppBuilder();
@@ -66,6 +94,10 @@ public class BrowserWindow extends JFrame {
 
         cefApp = builder.build();
         cefClient = cefApp.createClient();
+
+        if (downloadWindow != null) {
+            downloadWindow.setVisible(false);
+        }
 
         try {
             setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
