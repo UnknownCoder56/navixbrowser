@@ -4,6 +4,8 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.handler.CefLoadHandlerAdapter;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+
 import javax.swing.*;
 
 public class NavixLoadHandler extends CefLoadHandlerAdapter {
@@ -28,7 +30,13 @@ public class NavixLoadHandler extends CefLoadHandlerAdapter {
     public void onLoadError(CefBrowser cefBrowser, CefFrame cefFrame, ErrorCode errorCode, String s, String s1) {
         super.onLoadError(cefBrowser, cefFrame, errorCode, s, s1);
         if (errorCode.getCode() != -3) {
-            JOptionPane.showMessageDialog(cefBrowser.getUIComponent(), "Failed to load " + cefBrowser.getURL() + " with error code " + errorCode.getCode() + "!", JOptionPane.MESSAGE_PROPERTY, JOptionPane.ERROR_MESSAGE);
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                JOptionPane.showMessageDialog(cefBrowser.getUIComponent(), "Failed to load " + cefBrowser.getURL() + " with error code " + errorCode.getCode() + "!", JOptionPane.MESSAGE_PROPERTY, JOptionPane.ERROR_MESSAGE);
+                UIManager.setLookAndFeel(new FlatDarkLaf());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

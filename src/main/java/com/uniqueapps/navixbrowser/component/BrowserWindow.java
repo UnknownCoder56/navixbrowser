@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -44,22 +45,30 @@ public class BrowserWindow extends JFrame {
 
     public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent)
             throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
-        File file = new File(".", "cache");
-        file.mkdirs();
+        
+        File cache = new File(".", "cache");
+        cache.mkdirs();
+
+        File resources = new File(".", "resources");
+        if (resources.mkdirs()) {
+            Files.copy(getClass().getResourceAsStream("/resources/navix.ico"), new File(new File(".", "resources"), "navix.ico").toPath());
+            Files.copy(getClass().getResourceAsStream("/resources/newtab.html"), new File(new File(".", "resources"), "newtab.html").toPath());
+            Files.copy(getClass().getResourceAsStream("/resources/style.css"), new File(new File(".", "resources"), "style.css").toPath());
+        }
 
         CefAppBuilder builder = new CefAppBuilder();
 
         builder.getCefSettings().windowless_rendering_enabled = useOSR;
         builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/0.5";
         builder.getCefSettings().user_agent_product = "Navix 0.5";
-        builder.getCefSettings().cache_path = file.getAbsolutePath();
+        builder.getCefSettings().cache_path = cache.getAbsolutePath();
         builder.setAppHandler(new NavixAppHandler());
 
         cefApp = builder.build();
         cefClient = cefApp.createClient();
 
         try {
-            setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/pages/navix.png"))));
+            setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

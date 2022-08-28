@@ -1,2 +1,4 @@
-/app-distrib
 /target
+/jcef-bundle
+/resources
+/cache
