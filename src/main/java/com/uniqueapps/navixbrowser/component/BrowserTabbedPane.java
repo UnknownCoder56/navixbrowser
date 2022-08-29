@@ -25,7 +25,8 @@ import java.util.Objects;
 
 public class BrowserTabbedPane extends JTabbedPane {
 
-    BrowserWindow windowFrame;
+	private static final long serialVersionUID = -3055974049370144677L;
+	BrowserWindow windowFrame;
     JButton forwardNav, backwardNav;
     JTextField browserField;
     public static Map<Component, CefBrowser> browserComponentMap = new HashMap<>();
@@ -63,7 +64,8 @@ public class BrowserTabbedPane extends JTabbedPane {
                 super.mouseClicked(e);
                 if (SwingUtilities.isRightMouseButton(e)) {
                     JPopupMenu popupMenu = new JPopupMenu() {
-                        @Override
+						private static final long serialVersionUID = 3325907722226518327L;
+						@Override
                         protected void paintComponent(Graphics g) {
                             Graphics2D g2d = (Graphics2D) g;
                             g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -147,7 +149,8 @@ public class BrowserTabbedPane extends JTabbedPane {
             newTitle = newTitle.substring(0, 12) + "...";
         }
         JPanel tabPanel = new JPanel(new BorderLayout(4, 4)) {
-            @Override
+			private static final long serialVersionUID = 3725666626083864341L;
+			@Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;

@@ -11,8 +11,10 @@ import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;    
 
 public class RuntimeDownloadWindow extends JFrame {
+	
+	static final long serialVersionUID = -1763136977454349368L;
 
-    public RuntimeDownloadWindow() {
+	public RuntimeDownloadWindow() {
         super();
         this.setLocationRelativeTo(null);
         this.add(new JLabel("Downloading runtime..."), BorderLayout.CENTER);

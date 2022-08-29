@@ -6,7 +6,8 @@ import java.awt.geom.RoundRectangle2D;
 
 public class RoundedBorder extends AbstractBorder {
 
-    Color color;
+	private static final long serialVersionUID = -4780079987980303498L;
+	Color color;
     Stroke stroke;
     Insets borderInsets;
     int radius;
