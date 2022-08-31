@@ -43,6 +43,7 @@ import javax.swing.border.EmptyBorder;
 import org.cef.CefApp;
 import org.cef.CefClient;
 
+import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.handler.NavixAppHandler;
 import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
 import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
@@ -68,12 +69,13 @@ public class BrowserWindow extends JFrame {
 	private final JButton reloadButton;
 	private final JButton addTabButton;
 	private final JButton addBookmarkButton;
+	private final JButton contextMenuButton;
 	private final BrowserTabbedPane tabbedPane;
 	public boolean browserIsInFocus = false;
 
 	File cache = new File(".", "cache");
 
-	File bookmarkFile = new File(cache, "bookmarks");
+	File bookmarkFile = new File(Main.userAppData, "bookmarks");
 	private final Map<String, String> bookmarks = new HashMap<>();
 	JPanel bookmarksPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
 
@@ -87,7 +89,7 @@ public class BrowserWindow extends JFrame {
 			downloadWindow.setVisible(true);
 		}
 
-		cache.mkdirs();
+		cache.mkdir();
 
 		File resources = new File(".", "resources");
 		if (resources.mkdirs()) {
@@ -105,7 +107,7 @@ public class BrowserWindow extends JFrame {
 		builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/0.5";
 		builder.getCefSettings().user_agent_product = "Navix 0.5";
 		builder.getCefSettings().cache_path = cache.getAbsolutePath();
-		builder.addJcefArgs("--disable-gpu");
+		if (!Main.settings.HAL) builder.addJcefArgs("--disable-gpu");
 		builder.setAppHandler(new NavixAppHandler());
 
 		cefApp = builder.build();
@@ -122,7 +124,7 @@ public class BrowserWindow extends JFrame {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		
 		try {
 			setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
 		} catch (IOException e) {
@@ -135,6 +137,7 @@ public class BrowserWindow extends JFrame {
 		reloadButton = new JButton();
 		addTabButton = new JButton();
 		addBookmarkButton = new JButton();
+		contextMenuButton = new JButton();
 		browserAddressField = new JTextField(100) {
 			private static final long serialVersionUID = -6518323374167056051L;
 
@@ -160,6 +163,7 @@ public class BrowserWindow extends JFrame {
 		addListeners();
 		prepareNavBar(startURL, useOSR, isTransparent);
 
+		tabbedPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 		tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent);
 	}
 
@@ -172,7 +176,7 @@ public class BrowserWindow extends JFrame {
 	}
 
 	private void addListeners() {
-		// A hack to enable browser resizing in non-OSR mode
+		// A hack to enable browser resizing in non-OSR mode in Linux.
 		addComponentListener(new NavixComponentListener(this, tabbedPane));
 		addWindowListener(new NavixWindowListener(this, cefApp));
 	}
@@ -187,7 +191,7 @@ public class BrowserWindow extends JFrame {
 				if (query.contains(".") || query.contains("://")) {
 					tabbedPane.getSelectedBrowser().loadURL(query);
 				} else {
-					tabbedPane.getSelectedBrowser().loadURL("https://google.com/search?q=" + query);
+					tabbedPane.getSelectedBrowser().loadURL(Main.settings.searchEngine + query);
 				}
 			}
 		});
@@ -221,32 +225,37 @@ public class BrowserWindow extends JFrame {
 		reloadButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		addTabButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		addBookmarkButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		contextMenuButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		homeButton.setBackground(this.getBackground());
 		backwardNav.setBackground(this.getBackground());
 		forwardNav.setBackground(this.getBackground());
 		reloadButton.setBackground(this.getBackground());
 		addTabButton.setBackground(this.getBackground());
 		addBookmarkButton.setBackground(this.getBackground());
+		contextMenuButton.setBackground(this.getBackground());
 
 		try {
 			homeButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/home.png")))
-							.getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
 			backwardNav.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/left-chevron.png")))
-							.getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
+					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/left-arrow.png")))
+							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
 			forwardNav.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/right-chevron.png")))
-							.getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
+					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/right-arrow.png")))
+							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
 			reloadButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/reload.png")))
-							.getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
 			addTabButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/add.png")))
-							.getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
 			addBookmarkButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/bookmark.png")))
-							.getScaledInstance(30, 30, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+			contextMenuButton.setIcon(new ImageIcon(
+					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/menu-bar.png")))
+							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -272,6 +281,23 @@ public class BrowserWindow extends JFrame {
 				bookmarks.put(name, url);
 				refreshBookmarks();
 			}
+		});
+		contextMenuButton.addActionListener(l -> {
+			JPopupMenu popup = new JPopupMenu();
+
+			JMenuItem newTab = new JMenuItem("New tab");
+			newTab.addActionListener(l1 -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
+			popup.add(newTab);
+
+			JMenuItem settings = new JMenuItem("Settings");
+			settings.addActionListener(l1 -> new SettingsDialog(this).setVisible(true));
+			popup.add(settings);
+
+			JMenuItem exit = new JMenuItem("Exit");
+			exit.addActionListener(l1 -> System.exit(0));
+			popup.add(exit);
+
+			popup.show(this, contextMenuButton.getX(), contextMenuButton.getY());
 		});
 
 		JPanel separatorPanel = new JPanel() {
@@ -300,7 +326,8 @@ public class BrowserWindow extends JFrame {
 			bookmarkButton.setBorder(new EmptyBorder(4, 4, 4, 4));
 			bookmarkButton.setBackground(this.getBackground());
 			try {
-				bookmarkButton.setIcon(new ImageIcon(ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + bookmark.getValue()))));
+				bookmarkButton.setIcon(new ImageIcon(
+						ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + bookmark.getValue()))));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
@@ -354,6 +381,10 @@ public class BrowserWindow extends JFrame {
 		gbc.weightx = 0.1;
 		navBar.add(addBookmarkButton, gbc);
 
+		gbc.gridx = 8;
+		gbc.weightx = 0.1;
+		navBar.add(contextMenuButton, gbc);
+
 		getContentPane().add(navBar, BorderLayout.NORTH);
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		getContentPane().add(bookmarksPanel, BorderLayout.SOUTH);
@@ -380,7 +411,8 @@ public class BrowserWindow extends JFrame {
 			bookmarkButton.setBorder(new EmptyBorder(4, 4, 4, 4));
 			bookmarkButton.setBackground(this.getBackground());
 			try {
-				bookmarkButton.setIcon(new ImageIcon(ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + bookmark.getValue()))));
+				bookmarkButton.setIcon(new ImageIcon(
+						ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + bookmark.getValue()))));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
