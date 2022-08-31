@@ -123,6 +123,7 @@ public class BrowserWindow extends JFrame {
 			bookmarks.putAll((HashMap<String, String>) ois.readObject());
 		} catch (Exception e) {
 			e.printStackTrace();
+			refreshBookmarks();
 		}
 		
 		try {
