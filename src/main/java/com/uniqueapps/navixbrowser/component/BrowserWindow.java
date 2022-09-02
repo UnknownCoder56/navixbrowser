@@ -37,6 +37,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
@@ -61,9 +62,9 @@ import me.friwi.jcefmaven.UnsupportedPlatformException;
 public class BrowserWindow extends JFrame {
 
 	private static final long serialVersionUID = -3658310837225120769L;
-	
-	public static String version = "1.3";
-	
+
+	public static String version = "1.5";
+
 	protected final CefApp cefApp;
 	private final CefClient cefClient;
 	private final JTextField browserAddressField;
@@ -74,6 +75,7 @@ public class BrowserWindow extends JFrame {
 	private final JButton addTabButton;
 	private final JButton addBookmarkButton;
 	private final JButton contextMenuButton;
+	public final JProgressBar loadBar;
 	public final BrowserTabbedPane tabbedPane;
 	public boolean browserIsInFocus = false;
 
@@ -107,11 +109,13 @@ public class BrowserWindow extends JFrame {
 		CefAppBuilder builder = new CefAppBuilder();
 
 		builder.getCefSettings().windowless_rendering_enabled = useOSR;
-		builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/" + version;
+		builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/"
+				+ version;
 		builder.getCefSettings().user_agent_product = "Navix " + version;
 		builder.getCefSettings().cache_path = cache.getAbsolutePath();
 		builder.setProgressHandler(downloadWindow);
-		if (!Main.settings.HAL) builder.addJcefArgs("--disable-gpu");
+		if (!Main.settings.HAL)
+			builder.addJcefArgs("--disable-gpu");
 		builder.setAppHandler(new NavixAppHandler());
 
 		cefApp = builder.build();
@@ -125,7 +129,7 @@ public class BrowserWindow extends JFrame {
 			e.printStackTrace();
 			refreshBookmarks();
 		}
-		
+
 		try {
 			setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
 		} catch (IOException e) {
@@ -139,6 +143,7 @@ public class BrowserWindow extends JFrame {
 		addTabButton = new JButton();
 		addBookmarkButton = new JButton();
 		contextMenuButton = new JButton();
+		loadBar = new JProgressBar();
 		browserAddressField = new JTextField(100) {
 			private static final long serialVersionUID = -6518323374167056051L;
 
@@ -161,7 +166,7 @@ public class BrowserWindow extends JFrame {
 		}
 
 		downloadWindow.setVisible(false);
-		
+
 		addCefHandlers();
 		addListeners();
 		prepareNavBar(startURL, useOSR, isTransparent);
@@ -275,8 +280,7 @@ public class BrowserWindow extends JFrame {
 				tabbedPane.getSelectedBrowser().goForward();
 			}
 		});
-		reloadButton.addActionListener(
-				l -> tabbedPane.getSelectedBrowser().loadURL(tabbedPane.getSelectedBrowser().getURL()));
+		reloadButton.addActionListener(l -> tabbedPane.getSelectedBrowser().reload());
 		addTabButton.addActionListener(l -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
 		addBookmarkButton.addActionListener(l -> {
 			String name = JOptionPane.showInputDialog("Bookmark name", "New Bookmark");
@@ -346,6 +350,21 @@ public class BrowserWindow extends JFrame {
 			bookmarkButton.setComponentPopupMenu(popup);
 			bookmarksPanel.add(bookmarkButton);
 		}
+		if (bookmarks.isEmpty())
+			bookmarksPanel.setVisible(false);
+		else
+			bookmarksPanel.setVisible(true);
+
+		loadBar.setVisible(false);
+		loadBar.setIndeterminate(true);
+		JPanel bottomPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints gbcX = new GridBagConstraints();
+		gbcX.fill = GridBagConstraints.HORIZONTAL;
+		gbcX.weightx = 8;
+		bottomPanel.add(loadBar, gbcX);
+		gbcX.gridy = 1;
+		gbcX.weightx = 10;
+		bottomPanel.add(bookmarksPanel, gbcX);
 
 		GridBagConstraints gbc = new GridBagConstraints();
 
@@ -391,7 +410,7 @@ public class BrowserWindow extends JFrame {
 
 		getContentPane().add(navBar, BorderLayout.NORTH);
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
-		getContentPane().add(bookmarksPanel, BorderLayout.SOUTH);
+		getContentPane().add(bottomPanel, BorderLayout.SOUTH);
 	}
 
 	private void refreshBookmarks() {
@@ -431,7 +450,11 @@ public class BrowserWindow extends JFrame {
 			bookmarkButton.setComponentPopupMenu(popup);
 			bookmarksPanel.add(bookmarkButton);
 		}
-		this.setVisible(false);
-		this.setVisible(true);
+		if (!bookmarks.isEmpty()) {
+			bookmarksPanel.setVisible(false);
+			bookmarksPanel.setVisible(true);
+		} else {
+			bookmarksPanel.setVisible(false);
+		}
 	}
 }

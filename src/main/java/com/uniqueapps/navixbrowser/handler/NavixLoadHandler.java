@@ -1,22 +1,41 @@
 package com.uniqueapps.navixbrowser.handler;
 
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.handler.CefLoadHandlerAdapter;
+import org.cef.network.CefRequest.TransitionType;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-
-import javax.swing.*;
+import com.uniqueapps.navixbrowser.component.BrowserWindow;
 
 public class NavixLoadHandler extends CefLoadHandlerAdapter {
 
 	JButton forwardNav, backwardNav;
-	JFrame windowFrame;
+	BrowserWindow browserWindow;
 
-	public NavixLoadHandler(JButton forwardNav, JButton backwardNav, JFrame windowFrame) {
+	public NavixLoadHandler(JButton forwardNav, JButton backwardNav, BrowserWindow browserWindow) {
 		this.forwardNav = forwardNav;
 		this.backwardNav = backwardNav;
-		this.windowFrame = windowFrame;
+		this.browserWindow = browserWindow;
+	}
+
+	@Override
+	public void onLoadStart(CefBrowser browser, CefFrame frame, TransitionType transitionType) {
+		super.onLoadStart(browser, frame, transitionType);
+		browserWindow.loadBar.setIndeterminate(false);
+		browserWindow.loadBar.setValue(0);
+		browserWindow.loadBar.setIndeterminate(true);
+		browserWindow.loadBar.setVisible(true);
+	}
+
+	@Override
+	public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
+		super.onLoadEnd(browser, frame, httpStatusCode);
+		browserWindow.loadBar.setVisible(false);
 	}
 
 	@Override
@@ -29,6 +48,7 @@ public class NavixLoadHandler extends CefLoadHandlerAdapter {
 	@Override
 	public void onLoadError(CefBrowser cefBrowser, CefFrame cefFrame, ErrorCode errorCode, String s, String s1) {
 		super.onLoadError(cefBrowser, cefFrame, errorCode, s, s1);
+		browserWindow.loadBar.setVisible(false);
 		new Thread(() -> {
 			if (errorCode.getCode() != -3) {
 				try {
