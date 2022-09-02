@@ -155,13 +155,25 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 				}
 			} else {
 				switch (commandId) {
-				case BACK -> browser.goBack();
-				case FORWARD -> browser.goForward();
-				case REFRESH -> browser.reload();
-				case ZOOM_IN -> browser.setZoomLevel(browser.getZoomLevel() + 0.25);
-				case ZOOM_OUT -> browser.setZoomLevel(browser.getZoomLevel() - 0.25);
-				case ZOOM_RESET -> browser.setZoomLevel(0);
-				case SCREENSHOT -> {
+				case BACK:
+					browser.goBack();
+					break;
+				case FORWARD:
+					browser.goForward();
+					break;
+				case REFRESH:
+					browser.reload();
+					break;
+				case ZOOM_IN:
+					browser.setZoomLevel(browser.getZoomLevel() + 0.25);
+					break;
+				case ZOOM_OUT:
+					browser.setZoomLevel(browser.getZoomLevel() - 0.25);
+					break;
+				case ZOOM_RESET:
+					browser.setZoomLevel(0);
+					break;
+				case SCREENSHOT:
 					new Thread(() -> {
 						try {
 							UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -191,14 +203,18 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 							e.printStackTrace();
 						}
 					}).start();
-				}
-				case VIEW_PAGE_SOURCE -> browser.viewSource();
-				default -> success = false;
+					break;
+				case VIEW_PAGE_SOURCE:
+					browser.viewSource();
+					break;
+				default:
+					success = false;
+					break;
 				}
 			}
 		} else {
 			switch (commandId) {
-			case COPY -> {
+			case COPY:
 				try {
 					var image = ImageIO.read(new URL(params.getSourceUrl()));
 					if (image != null) {
@@ -208,10 +224,12 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 				} catch (HeadlessException | IOException e) {
 					e.printStackTrace();
 				}
-			}
-			case COPY_IMAGE_LINK -> Toolkit.getDefaultToolkit().getSystemClipboard()
-					.setContents(new StringSelection(params.getSourceUrl()), null);
-			case SAVE_AS -> {
+				break;
+			case COPY_IMAGE_LINK:
+				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(params.getSourceUrl()),
+						null);
+				break;
+			case SAVE_AS:
 				new Thread(() -> {
 					try {
 						UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -229,8 +247,10 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 						e.printStackTrace();
 					}
 				}).start();
-			}
-			default -> success = false;
+				break;
+			default:
+				success = false;
+				break;
 			}
 		}
 		return success;
