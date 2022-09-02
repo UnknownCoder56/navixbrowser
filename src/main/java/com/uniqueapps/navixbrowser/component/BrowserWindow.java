@@ -45,6 +45,7 @@ import org.cef.CefClient;
 
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.handler.NavixAppHandler;
+import com.uniqueapps.navixbrowser.handler.NavixContextMenuHandler;
 import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
 import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
 import com.uniqueapps.navixbrowser.handler.NavixDownloadHandler;
@@ -60,6 +61,9 @@ import me.friwi.jcefmaven.UnsupportedPlatformException;
 public class BrowserWindow extends JFrame {
 
 	private static final long serialVersionUID = -3658310837225120769L;
+	
+	public static String version = "1.3";
+	
 	protected final CefApp cefApp;
 	private final CefClient cefClient;
 	private final JTextField browserAddressField;
@@ -70,7 +74,7 @@ public class BrowserWindow extends JFrame {
 	private final JButton addTabButton;
 	private final JButton addBookmarkButton;
 	private final JButton contextMenuButton;
-	private final BrowserTabbedPane tabbedPane;
+	public final BrowserTabbedPane tabbedPane;
 	public boolean browserIsInFocus = false;
 
 	File cache = new File(".", "cache");
@@ -83,9 +87,8 @@ public class BrowserWindow extends JFrame {
 	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent)
 			throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
 
-		RuntimeDownloadWindow downloadWindow = null;
+		RuntimeDownloadHandler downloadWindow = new RuntimeDownloadHandler(this);
 		if (!new File(".", "jcef-bundle").exists()) {
-			downloadWindow = new RuntimeDownloadWindow();
 			downloadWindow.setVisible(true);
 		}
 
@@ -104,18 +107,15 @@ public class BrowserWindow extends JFrame {
 		CefAppBuilder builder = new CefAppBuilder();
 
 		builder.getCefSettings().windowless_rendering_enabled = useOSR;
-		builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/0.5";
-		builder.getCefSettings().user_agent_product = "Navix 0.5";
+		builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/" + version;
+		builder.getCefSettings().user_agent_product = "Navix " + version;
 		builder.getCefSettings().cache_path = cache.getAbsolutePath();
+		builder.setProgressHandler(downloadWindow);
 		if (!Main.settings.HAL) builder.addJcefArgs("--disable-gpu");
 		builder.setAppHandler(new NavixAppHandler());
 
 		cefApp = builder.build();
 		cefClient = cefApp.createClient();
-
-		if (downloadWindow != null) {
-			downloadWindow.setVisible(false);
-		}
 
 		bookmarkFile.createNewFile();
 
@@ -160,6 +160,8 @@ public class BrowserWindow extends JFrame {
 			throw new RuntimeException(e);
 		}
 
+		downloadWindow.setVisible(false);
+		
 		addCefHandlers();
 		addListeners();
 		prepareNavBar(startURL, useOSR, isTransparent);
@@ -169,6 +171,7 @@ public class BrowserWindow extends JFrame {
 	}
 
 	private void addCefHandlers() {
+		cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, this));
 		cefClient.addDialogHandler(new NavixDialogHandler(this));
 		cefClient.addDisplayHandler(new NavixDisplayHandler(this, tabbedPane, browserAddressField, cefApp));
 		cefClient.addDownloadHandler(new NavixDownloadHandler());

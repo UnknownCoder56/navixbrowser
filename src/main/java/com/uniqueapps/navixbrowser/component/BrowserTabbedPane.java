@@ -111,11 +111,14 @@ public class BrowserTabbedPane extends JTabbedPane {
 
     public void addBrowserTab(CefApp cefApp, String startURL, boolean useOSR, boolean isTransparent) {
         var cefClient = cefApp.createClient();
+        
+        cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, windowFrame));
         cefClient.addDialogHandler(new NavixDialogHandler(windowFrame));
         cefClient.addDisplayHandler(new NavixDisplayHandler(windowFrame, this, browserField, cefApp));
         cefClient.addDownloadHandler(new NavixDownloadHandler());
         cefClient.addFocusHandler(new NavixFocusHandler(windowFrame));
         cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, windowFrame));
+        
         var cefBrowser = cefClient.createBrowser(startURL, useOSR, isTransparent);
         browserComponentMap.put(cefBrowser.getUIComponent(), cefBrowser);
         addTab("New Tab", null, cefBrowser.getUIComponent(), cefBrowser.getURL());
