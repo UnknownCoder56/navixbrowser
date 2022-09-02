@@ -26,11 +26,6 @@
       <version>2.4</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.tika</groupId>
-      <artifactId>tika-core</artifactId>
-      <version>2.4.1</version>
-    </dependency>
-    <dependency>
       <groupId>me.friwi</groupId>
       <artifactId>jcefmaven</artifactId>
       <version>104.4.23</version>

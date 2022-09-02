@@ -29,18 +29,23 @@ public class NavixLoadHandler extends CefLoadHandlerAdapter {
 	@Override
 	public void onLoadError(CefBrowser cefBrowser, CefFrame cefFrame, ErrorCode errorCode, String s, String s1) {
 		super.onLoadError(cefBrowser, cefFrame, errorCode, s, s1);
-		if (errorCode.getCode() != -3) {
-			new Thread(() -> {
+		new Thread(() -> {
+			if (errorCode.getCode() != -3) {
 				try {
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 					JOptionPane.showMessageDialog(cefBrowser.getUIComponent(),
 							"Failed to load " + cefBrowser.getURL() + " with error code " + errorCode.getCode() + "!",
 							JOptionPane.MESSAGE_PROPERTY, JOptionPane.ERROR_MESSAGE);
 					UIManager.setLookAndFeel(new FlatDarkLaf());
+					if (cefBrowser.canGoBack()) {
+						cefBrowser.goBack();
+					} else {
+						cefBrowser.loadURL("navix://home");
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}).start();
-		}
+			}
+		}).start();
 	}
 }

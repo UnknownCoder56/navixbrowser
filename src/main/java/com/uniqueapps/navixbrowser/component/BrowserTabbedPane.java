@@ -98,7 +98,7 @@ public class BrowserTabbedPane extends JTabbedPane {
             for (int i = 0; i < getTabCount(); i++) {
                 Component c = getTabComponentAt(i);
                 if (c != null) {
-                    c.setBackground(getSelectedIndex() == i ? cornflowerBlue : cornflowerBlue.darker());
+                    c.setBackground(getSelectedIndex() == i ? cornflowerBlue : Color.GRAY);
                 }
             }
             if (!getSelectedBrowser().getURL().contains("newtab.html")) {
@@ -165,8 +165,9 @@ public class BrowserTabbedPane extends JTabbedPane {
                 g2d.fill(panelArea);
             }
         };
-        tabPanel.setBackground(highlightTab ? cornflowerBlue : cornflowerBlue.darker());
+        tabPanel.setBackground(highlightTab ? cornflowerBlue : Color.GRAY);
         JLabel tabInfoLabel = new JLabel(newTitle);
+        tabInfoLabel.setForeground(Color.BLACK);
         tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
         try {
             tabInfoLabel.setIcon(new ImageIcon(ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + cefBrowser.getURL()))));
