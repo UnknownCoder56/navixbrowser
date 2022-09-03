@@ -18,11 +18,11 @@ import javax.swing.border.EmptyBorder;
 
 import com.uniqueapps.navixbrowser.Main;
 
-public class SettingsDialog extends JPanel {
+public class SettingsPanel extends JPanel {
 
 	private static final long serialVersionUID = 4379679088941442158L;
 
-	public SettingsDialog() {
+	public SettingsPanel() {
 		Map<String, String> engines = new HashMap<>();
 		engines.put("Google", "https://google.com/search?q=");
 		engines.put("Bing", "https://bing.com/search?q=");

@@ -159,7 +159,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 	}
 
 	public void addSettingsTab(CefApp cefApp) {
-		var settingsDialog = new SettingsDialog();
+		var settingsDialog = new SettingsPanel();
 		addTab("Settings", null, settingsDialog, "Navix settings");
 		setTabComponentAt(getTabCount() - 1, generateSettingsTabPanel(windowFrame, this, cefApp, settingsDialog, true));
 		setSelectedIndex(getTabCount() - 1);
@@ -170,7 +170,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 		removeTabAt(indexOfComponent(browser.getUIComponent()));
 	}
 
-	public void removeSettingsTab(SettingsDialog settingsDialog) {
+	public void removeSettingsTab(SettingsPanel settingsDialog) {
 		removeTabAt(indexOfComponent(settingsDialog));
 	}
 
@@ -254,7 +254,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 	}
 
 	public static JPanel generateSettingsTabPanel(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane,
-			CefApp cefApp, SettingsDialog settingsDialog, boolean highlightTab) {
+			CefApp cefApp, SettingsPanel settingsDialog, boolean highlightTab) {
 		JPanel tabPanel = new JPanel(new BorderLayout(4, 4)) {
 			private static final long serialVersionUID = 3725666626083864341L;
 
