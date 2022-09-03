@@ -1,18 +1,19 @@
 package com.uniqueapps.navixbrowser.component;
 
-import org.cef.CefApp;
-import org.cef.browser.CefBrowser;
-
-import com.uniqueapps.navixbrowser.handler.*;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.basic.BasicTabbedPaneUI;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
@@ -22,6 +23,29 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
+
+import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
+
+import com.uniqueapps.navixbrowser.handler.NavixContextMenuHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDownloadHandler;
+import com.uniqueapps.navixbrowser.handler.NavixFocusHandler;
+import com.uniqueapps.navixbrowser.handler.NavixLoadHandler;
 
 public class BrowserTabbedPane extends JTabbedPane {
 
@@ -33,6 +57,10 @@ public class BrowserTabbedPane extends JTabbedPane {
 	private static final ImageIcon closeImage;
 	private static final Color cornflowerBlue = new Color(100, 149, 237);
 
+	private boolean dragging = false;
+	private Point currentMouseLocation = null;
+	private int draggedTabIndex = 0;
+
 	static {
 		try {
 			closeImage = new ImageIcon(ImageIO
@@ -43,8 +71,9 @@ public class BrowserTabbedPane extends JTabbedPane {
 		}
 	}
 
-	public BrowserTabbedPane(BrowserWindow windowFrame, JButton homeButton, JButton forwardNav, JButton backwardNav, JButton reloadButton,
-			JTextField browserField) throws IOException {
+	public BrowserTabbedPane(BrowserWindow windowFrame, JButton homeButton, JButton forwardNav, JButton backwardNav,
+			JButton reloadButton, JTextField browserField) throws IOException {
+		super();
 		this.windowFrame = windowFrame;
 		this.homeButton = homeButton;
 		this.forwardNav = forwardNav;
@@ -63,6 +92,24 @@ public class BrowserTabbedPane extends JTabbedPane {
 			@Override
 			protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h,
 					boolean isSelected) {
+			}
+		});
+		addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				if (!dragging) {
+					// Gets the tab index based on the mouse position
+					int tabNumber = getUI().tabForCoordinate(BrowserTabbedPane.this, e.getX(), e.getY());
+					if (tabNumber >= 0) {
+						draggedTabIndex = tabNumber;
+						dragging = true;
+					}
+				} else {
+					currentMouseLocation = e.getPoint();
+					repaint();
+				}
+
+				super.mouseDragged(e);
 			}
 		});
 		var tabbedPane = this;
@@ -107,6 +154,25 @@ public class BrowserTabbedPane extends JTabbedPane {
 					popupMenu.show(tabbedPane, e.getX(), e.getY());
 				}
 			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (dragging) {
+					int tabNumber = getUI().tabForCoordinate(BrowserTabbedPane.this, e.getX(), 10);
+					if (tabNumber >= 0) {
+						Component comp = getComponentAt(draggedTabIndex);
+						Component tabComp = getTabComponentAt(draggedTabIndex);
+						String title = getTitleAt(draggedTabIndex);
+						removeTabAt(draggedTabIndex);
+						insertTab(title, null, comp, null, tabNumber);
+						SwingUtilities.invokeLater(() -> {
+							setTabComponentAt(tabNumber, tabComp);
+						});
+						setSelectedIndex(tabNumber);
+					}
+				}
+				dragging = false;
+			}
 		});
 		addChangeListener(l -> {
 			windowFrame.setTitle("Navix");
@@ -141,6 +207,24 @@ public class BrowserTabbedPane extends JTabbedPane {
 		});
 	}
 
+	@Override
+	protected void paintComponent(Graphics g) {
+		Map<RenderingHints.Key, Object> rh = new HashMap<>();
+		rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+		rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		rh.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		Graphics2D g2d = (Graphics2D) g;
+		g2d.setRenderingHints(rh);
+		if (dragging) {
+			int destTab = getUI().tabForCoordinate(BrowserTabbedPane.this,
+					Math.round(Math.round(currentMouseLocation.getX())), 10);
+			Rectangle bounds = getUI().getTabBounds(BrowserTabbedPane.this, destTab);
+			g2d.setColor(Color.WHITE);
+			g2d.drawLine(bounds.x, bounds.y, bounds.x, bounds.y + bounds.height);
+		}
+		super.paintComponent(g2d);
+	}
+
 	public void addBrowserTab(CefApp cefApp, String startURL, boolean useOSR, boolean isTransparent) {
 		var cefClient = cefApp.createClient();
 
@@ -170,7 +254,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 		removeTabAt(indexOfComponent(browser.getUIComponent()));
 	}
 
-	public void removeSettingsTab(SettingsPanel settingsDialog) {
+	public void removeSettingsTab(Component settingsDialog) {
 		removeTabAt(indexOfComponent(settingsDialog));
 	}
 
@@ -180,18 +264,6 @@ public class BrowserTabbedPane extends JTabbedPane {
 		} else {
 			return null;
 		}
-	}
-
-	@Override
-	public void paint(Graphics g) {
-		Map<RenderingHints.Key, Object> rh = new HashMap<>();
-		rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-		rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		rh.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.setRenderingHints(rh);
-		super.paint(g2d);
-		g2d.dispose();
 	}
 
 	public static JPanel generateTabPanel(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane, CefApp cefApp,
@@ -218,12 +290,14 @@ public class BrowserTabbedPane extends JTabbedPane {
 		JLabel tabInfoLabel = new JLabel(newTitle);
 		tabInfoLabel.setForeground(Color.BLACK);
 		tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		try {
-			tabInfoLabel.setIcon(new ImageIcon(
-					ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + cefBrowser.getURL()))));
-		} catch (IOException e) {
-			System.out.println("Could not get favicon for: " + cefBrowser.getURL());
-		}
+		SwingUtilities.invokeLater(() -> {
+			try {
+				tabInfoLabel.setIcon(new ImageIcon(
+						ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + cefBrowser.getURL()))));
+			} catch (IOException e) {
+				System.out.println("Could not get favicon for: " + cefBrowser.getURL());
+			}
+		});
 		tabPanel.add(tabInfoLabel, BorderLayout.CENTER);
 		JButton closeTabButton = new JButton();
 		closeTabButton.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -254,7 +328,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 	}
 
 	public static JPanel generateSettingsTabPanel(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane,
-			CefApp cefApp, SettingsPanel settingsDialog, boolean highlightTab) {
+			CefApp cefApp, Component settingsDialog, boolean highlightTab) {
 		JPanel tabPanel = new JPanel(new BorderLayout(4, 4)) {
 			private static final long serialVersionUID = 3725666626083864341L;
 

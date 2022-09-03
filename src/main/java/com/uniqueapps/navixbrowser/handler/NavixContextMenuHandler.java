@@ -71,15 +71,14 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 
 		if (params.getMediaType() != MediaType.CM_MEDIATYPE_IMAGE) {
 			if (params.getSelectionText() != null && !params.getSelectionText().isEmpty()) {
+				model.addItem(COPY, "Copy");
 				if (isValidURL(params.getSelectionText())) {
 					model.addItem(OPEN_IN_NEW_TAB, "Open in new tab");
-					model.addSeparator();
-					model.addItem(CANCEL, "Cancel");
 				} else {
 					model.addItem(SEARCH_IN_NEW_TAB, "Search for text in new tab");
-					model.addSeparator();
-					model.addItem(CANCEL, "Cancel");
 				}
+				model.addSeparator();
+				model.addItem(CANCEL, "Cancel");
 			} else if (params.getLinkUrl() != null && !params.getLinkUrl().isEmpty()) {
 				if (isValidURL(params.getLinkUrl())) {
 					model.addItem(OPEN_IN_NEW_TAB, "Open in new tab");
@@ -129,6 +128,10 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 		if (params.getMediaType() != MediaType.CM_MEDIATYPE_IMAGE) {
 			String selectedText = params.getSelectionText();
 			if (selectedText != null && !selectedText.isEmpty()) {
+				if (commandId == COPY) {
+					Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(selectedText),
+							null);
+				}
 				if (isValidURL(params.getSelectionText())) {
 					if (commandId == OPEN_IN_NEW_TAB) {
 						browserWindow.tabbedPane.addBrowserTab(cefApp, selectedText, Main.settings.OSR, false);
