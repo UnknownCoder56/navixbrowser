@@ -116,6 +116,7 @@ public class BrowserWindow extends JFrame {
 		builder.setProgressHandler(downloadWindow);
 		if (!Main.settings.HAL)
 			builder.addJcefArgs("--disable-gpu");
+		builder.addJcefArgs("--enable-media-stream");
 		builder.setAppHandler(new NavixAppHandler());
 
 		cefApp = builder.build();
@@ -160,7 +161,7 @@ public class BrowserWindow extends JFrame {
 		};
 
 		try {
-			tabbedPane = new BrowserTabbedPane(this, forwardNav, backwardNav, browserAddressField);
+			tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav, reloadButton, browserAddressField);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -269,22 +270,36 @@ public class BrowserWindow extends JFrame {
 			throw new RuntimeException(e);
 		}
 
-		homeButton.addActionListener(l -> tabbedPane.getSelectedBrowser().loadURL("navix://home"));
+		homeButton.addActionListener(l -> {
+			if (tabbedPane.getSelectedBrowser() != null) {
+				tabbedPane.getSelectedBrowser().loadURL("navix://home");
+			}
+		});
 		backwardNav.addActionListener(l -> {
-			if (tabbedPane.getSelectedBrowser().canGoBack()) {
-				tabbedPane.getSelectedBrowser().goBack();
+			if (tabbedPane.getSelectedBrowser() != null) {
+				if (tabbedPane.getSelectedBrowser().canGoBack()) {
+					tabbedPane.getSelectedBrowser().goBack();
+				}
 			}
 		});
 		forwardNav.addActionListener(l -> {
-			if (tabbedPane.getSelectedBrowser().canGoForward()) {
-				tabbedPane.getSelectedBrowser().goForward();
+			if (tabbedPane.getSelectedBrowser() != null) {
+				if (tabbedPane.getSelectedBrowser().canGoForward()) {
+					tabbedPane.getSelectedBrowser().goForward();
+				}
 			}
 		});
-		reloadButton.addActionListener(l -> tabbedPane.getSelectedBrowser().reload());
+		reloadButton.addActionListener(l -> {
+			if (tabbedPane.getSelectedBrowser() != null) {
+				tabbedPane.getSelectedBrowser().reload();
+			}
+		});
 		addTabButton.addActionListener(l -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
 		addBookmarkButton.addActionListener(l -> {
 			String name = JOptionPane.showInputDialog("Bookmark name", "New Bookmark");
-			String url = JOptionPane.showInputDialog("URL", tabbedPane.getSelectedBrowser().getURL());
+			String url = JOptionPane.showInputDialog("URL",
+					tabbedPane.getSelectedBrowser() != null ? tabbedPane.getSelectedBrowser().getURL()
+							: "https://google.com/");
 			if (url != null && name != null) {
 				bookmarks.put(name, url);
 				refreshBookmarks();
@@ -298,7 +313,7 @@ public class BrowserWindow extends JFrame {
 			popup.add(newTab);
 
 			JMenuItem settings = new JMenuItem("Settings");
-			settings.addActionListener(l1 -> new SettingsDialog(this).setVisible(true));
+			settings.addActionListener(l1 -> tabbedPane.addSettingsTab(cefApp));
 			popup.add(settings);
 
 			JMenuItem exit = new JMenuItem("Exit");
