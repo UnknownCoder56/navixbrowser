@@ -175,6 +175,84 @@ public class BrowserWindow extends JFrame {
 		tabbedPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 		tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent);
 	}
+	
+	@SuppressWarnings("unchecked")
+	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX)
+			throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
+
+		RuntimeDownloadHandler downloadWindow = new RuntimeDownloadHandler(this);
+		if (!new File(".", "jcef-bundle").exists()) {
+			downloadWindow.setVisible(true);
+		}
+
+		cache.mkdir();
+
+		File resources = new File(".", "resources");
+		if (resources.mkdirs()) {
+			Files.copy(getClass().getResourceAsStream("/resources/navix.ico"),
+					new File(new File(".", "resources"), "navix.ico").toPath());
+			Files.copy(getClass().getResourceAsStream("/resources/newtab.html"),
+					new File(new File(".", "resources"), "newtab.html").toPath());
+			Files.copy(getClass().getResourceAsStream("/resources/style.css"),
+					new File(new File(".", "resources"), "style.css").toPath());
+		}
+
+		cefApp = cefAppX;
+		cefClient = cefApp.createClient();
+
+		bookmarkFile.createNewFile();
+
+		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(bookmarkFile))) {
+			bookmarks.putAll((HashMap<String, String>) ois.readObject());
+		} catch (Exception e) {
+			e.printStackTrace();
+			refreshBookmarks();
+		}
+
+		try {
+			setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		homeButton = new JButton();
+		backwardNav = new JButton();
+		forwardNav = new JButton();
+		reloadButton = new JButton();
+		addTabButton = new JButton();
+		addBookmarkButton = new JButton();
+		contextMenuButton = new JButton();
+		loadBar = new JProgressBar();
+		browserAddressField = new JTextField(100) {
+			private static final long serialVersionUID = -6518323374167056051L;
+
+			@Override
+			protected void paintComponent(Graphics g) {
+				Map<RenderingHints.Key, Object> rh = new HashMap<>();
+				rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+				rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				rh.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+				Graphics2D g2d = (Graphics2D) g;
+				g2d.setRenderingHints(rh);
+				super.paintComponent(g2d);
+			}
+		};
+
+		try {
+			tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav, reloadButton, browserAddressField);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		downloadWindow.setVisible(false);
+
+		addCefHandlers();
+		addListeners();
+		prepareNavBar(startURL, useOSR, isTransparent);
+
+		tabbedPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+		tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent);
+	}
 
 	private void addCefHandlers() {
 		cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, this));

@@ -40,6 +40,8 @@ import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 
+import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.Main.Theme;
 import com.uniqueapps.navixbrowser.handler.NavixContextMenuHandler;
 import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
 import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
@@ -103,6 +105,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 					if (tabNumber >= 0) {
 						draggedTabIndex = tabNumber;
 						dragging = true;
+						repaint();
 					}
 				} else {
 					currentMouseLocation = e.getPoint();
@@ -112,7 +115,6 @@ public class BrowserTabbedPane extends JTabbedPane {
 				super.mouseDragged(e);
 			}
 		});
-		var tabbedPane = this;
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -131,18 +133,20 @@ public class BrowserTabbedPane extends JTabbedPane {
 					};
 
 					JMenuItem copyLinkItem = new JMenuItem("Copy URL");
-					copyLinkItem.addActionListener(l -> Toolkit.getDefaultToolkit().getSystemClipboard()
-							.setContents(new StringSelection(browserComponentMap
-									.get(tabbedPane.getComponentAt(
-											tabbedPane.getUI().tabForCoordinate(tabbedPane, e.getX(), e.getY())))
-									.getURL()), null));
+					copyLinkItem
+							.addActionListener(l -> Toolkit.getDefaultToolkit().getSystemClipboard()
+									.setContents(new StringSelection(browserComponentMap
+											.get(BrowserTabbedPane.this.getComponentAt(BrowserTabbedPane.this.getUI()
+													.tabForCoordinate(BrowserTabbedPane.this, e.getX(), e.getY())))
+											.getURL()), null));
 					popupMenu.add(copyLinkItem);
 
 					JMenuItem closeTabItem = new JMenuItem("Close tab");
 					closeTabItem.addActionListener(l -> {
-						if (tabbedPane.getTabCount() > 1) {
-							tabbedPane.removeBrowserTab(browserComponentMap.get(tabbedPane.getComponentAt(
-									tabbedPane.getUI().tabForCoordinate(tabbedPane, e.getX(), e.getY()))));
+						if (BrowserTabbedPane.this.getTabCount() > 1) {
+							BrowserTabbedPane.this.removeBrowserTab(
+									browserComponentMap.get(BrowserTabbedPane.this.getComponentAt(BrowserTabbedPane.this
+											.getUI().tabForCoordinate(BrowserTabbedPane.this, e.getX(), e.getY()))));
 						} else {
 							windowFrame.dispatchEvent(new WindowEvent(windowFrame, WindowEvent.WINDOW_CLOSING));
 							windowFrame.cefApp.dispose();
@@ -151,7 +155,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 					});
 					popupMenu.add(closeTabItem);
 
-					popupMenu.show(tabbedPane, e.getX(), e.getY());
+					popupMenu.show(BrowserTabbedPane.this, e.getX(), e.getY());
 				}
 			}
 
@@ -165,9 +169,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 						String title = getTitleAt(draggedTabIndex);
 						removeTabAt(draggedTabIndex);
 						insertTab(title, null, comp, null, tabNumber);
-						SwingUtilities.invokeLater(() -> {
-							setTabComponentAt(tabNumber, tabComp);
-						});
+						setTabComponentAt(tabNumber, tabComp);
 						setSelectedIndex(tabNumber);
 					}
 				}
@@ -209,20 +211,22 @@ public class BrowserTabbedPane extends JTabbedPane {
 
 	@Override
 	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		Graphics2D g2d = (Graphics2D) g;
 		Map<RenderingHints.Key, Object> rh = new HashMap<>();
 		rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
 		rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		rh.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		Graphics2D g2d = (Graphics2D) g;
 		g2d.setRenderingHints(rh);
-		if (dragging) {
+		if (dragging && currentMouseLocation != null) {
 			int destTab = getUI().tabForCoordinate(BrowserTabbedPane.this,
 					Math.round(Math.round(currentMouseLocation.getX())), 10);
-			Rectangle bounds = getUI().getTabBounds(BrowserTabbedPane.this, destTab);
-			g2d.setColor(Color.WHITE);
-			g2d.drawLine(bounds.x, bounds.y, bounds.x, bounds.y + bounds.height);
+			if (destTab != -1) {
+				Rectangle bounds = getUI().getTabBounds(BrowserTabbedPane.this, destTab);
+				g2d.setColor(Main.settings.theme == Theme.Dark ? Color.WHITE : Color.BLACK);
+				g2d.drawLine(bounds.x, bounds.y, bounds.x, bounds.y + bounds.height);
+			}
 		}
-		super.paintComponent(g2d);
 	}
 
 	public void addBrowserTab(CefApp cefApp, String startURL, boolean useOSR, boolean isTransparent) {
@@ -243,7 +247,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 	}
 
 	public void addSettingsTab(CefApp cefApp) {
-		var settingsDialog = new SettingsPanel();
+		var settingsDialog = new SettingsPanel(windowFrame);
 		addTab("Settings", null, settingsDialog, "Navix settings");
 		setTabComponentAt(getTabCount() - 1, generateSettingsTabPanel(windowFrame, this, cefApp, settingsDialog, true));
 		setSelectedIndex(getTabCount() - 1);
