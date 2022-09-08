@@ -63,7 +63,7 @@ public class BrowserWindow extends JFrame {
 
 	private static final long serialVersionUID = -3658310837225120769L;
 
-	public static String version = "1.5";
+	public static String version = "1.7";
 
 	protected final CefApp cefApp;
 	private final CefClient cefClient;
@@ -84,97 +84,6 @@ public class BrowserWindow extends JFrame {
 	File bookmarkFile = new File(Main.userAppData, "bookmarks");
 	private final Map<String, String> bookmarks = new HashMap<>();
 	JPanel bookmarksPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
-
-	@SuppressWarnings("unchecked")
-	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent)
-			throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
-
-		RuntimeDownloadHandler downloadWindow = new RuntimeDownloadHandler(this);
-		if (!new File(".", "jcef-bundle").exists()) {
-			downloadWindow.setVisible(true);
-		}
-
-		cache.mkdir();
-
-		File resources = new File(".", "resources");
-		if (resources.mkdirs()) {
-			Files.copy(getClass().getResourceAsStream("/resources/navix.ico"),
-					new File(new File(".", "resources"), "navix.ico").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/newtab.html"),
-					new File(new File(".", "resources"), "newtab.html").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/style.css"),
-					new File(new File(".", "resources"), "style.css").toPath());
-		}
-
-		CefAppBuilder builder = new CefAppBuilder();
-
-		builder.getCefSettings().windowless_rendering_enabled = useOSR;
-		builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/"
-				+ version;
-		builder.getCefSettings().user_agent_product = "Navix " + version;
-		builder.getCefSettings().cache_path = cache.getAbsolutePath();
-		builder.setProgressHandler(downloadWindow);
-		if (!Main.settings.HAL)
-			builder.addJcefArgs("--disable-gpu");
-		builder.addJcefArgs("--enable-media-stream");
-		builder.setAppHandler(new NavixAppHandler());
-
-		cefApp = builder.build();
-		cefClient = cefApp.createClient();
-
-		bookmarkFile.createNewFile();
-
-		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(bookmarkFile))) {
-			bookmarks.putAll((HashMap<String, String>) ois.readObject());
-		} catch (Exception e) {
-			e.printStackTrace();
-			refreshBookmarks();
-		}
-
-		try {
-			setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		homeButton = new JButton();
-		backwardNav = new JButton();
-		forwardNav = new JButton();
-		reloadButton = new JButton();
-		addTabButton = new JButton();
-		addBookmarkButton = new JButton();
-		contextMenuButton = new JButton();
-		loadBar = new JProgressBar();
-		browserAddressField = new JTextField(100) {
-			private static final long serialVersionUID = -6518323374167056051L;
-
-			@Override
-			protected void paintComponent(Graphics g) {
-				Map<RenderingHints.Key, Object> rh = new HashMap<>();
-				rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-				rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				rh.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-				Graphics2D g2d = (Graphics2D) g;
-				g2d.setRenderingHints(rh);
-				super.paintComponent(g2d);
-			}
-		};
-
-		try {
-			tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav, reloadButton, browserAddressField);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		downloadWindow.setVisible(false);
-
-		addCefHandlers();
-		addListeners();
-		prepareNavBar(startURL, useOSR, isTransparent);
-
-		tabbedPane.setBorder(new EmptyBorder(0, 0, 0, 0));
-		tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent);
-	}
 	
 	@SuppressWarnings("unchecked")
 	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX)
@@ -197,7 +106,23 @@ public class BrowserWindow extends JFrame {
 					new File(new File(".", "resources"), "style.css").toPath());
 		}
 
-		cefApp = cefAppX;
+		if (cefAppX != null) {
+			cefApp = cefAppX;
+		} else {
+			CefAppBuilder builder = new CefAppBuilder();
+			builder.getCefSettings().windowless_rendering_enabled = useOSR;
+			builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/"
+					+ version;
+			builder.getCefSettings().user_agent_product = "Navix " + version;
+			builder.getCefSettings().cache_path = cache.getAbsolutePath();
+			builder.setProgressHandler(downloadWindow);
+			if (!Main.settings.HAL)
+				builder.addJcefArgs("--disable-gpu");
+			builder.addJcefArgs("--enable-media-stream");
+			builder.setAppHandler(new NavixAppHandler());
+			cefApp = builder.build();
+		}
+		
 		cefClient = cefApp.createClient();
 
 		bookmarkFile.createNewFile();
@@ -258,7 +183,7 @@ public class BrowserWindow extends JFrame {
 		cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, this));
 		cefClient.addDialogHandler(new NavixDialogHandler(this));
 		cefClient.addDisplayHandler(new NavixDisplayHandler(this, tabbedPane, browserAddressField, cefApp));
-		cefClient.addDownloadHandler(new NavixDownloadHandler());
+		cefClient.addDownloadHandler(new NavixDownloadHandler(this));
 		cefClient.addFocusHandler(new NavixFocusHandler(this));
 		cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, this));
 	}
@@ -390,6 +315,10 @@ public class BrowserWindow extends JFrame {
 			newTab.addActionListener(l1 -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
 			popup.add(newTab);
 
+			JMenuItem downloads = new JMenuItem("Downloads");
+			downloads.addActionListener(l1 -> tabbedPane.addDownloadsTab(cefApp));
+			popup.add(downloads);
+			
 			JMenuItem settings = new JMenuItem("Settings");
 			settings.addActionListener(l1 -> tabbedPane.addSettingsTab(cefApp));
 			popup.add(settings);
