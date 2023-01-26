@@ -76,9 +76,7 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 						downloadPanel.downloadObject.downloadState = DownloadState.FINISHED;
 						downloadPanel.progressBar.setVisible(false);
 						downloadPanel.actions.setVisible(false);
-						new Thread(() -> {
-							Main.refreshDownloads();
-						}).start();
+						new Thread(Main::refreshDownloads).start();
 					});
 		}
 	}

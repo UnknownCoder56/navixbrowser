@@ -44,7 +44,7 @@ public class DownloadObjectPanel extends JPanel {
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				super.mouseEntered(e);
-				textUrl.setForeground(Color.BLUE);
+				textUrl.setForeground(Color.BLUE.brighter().brighter());
 			}
 
 			@Override
@@ -63,17 +63,10 @@ public class DownloadObjectPanel extends JPanel {
 		JLabel textDate = new JLabel(new SimpleDateFormat("dd MMMM yyyy hh:mm:ss aa").format(downloadObject.date));
 
 		JButton pause = new JButton("Pause");
-		if (downloadObject.downloadState == DownloadState.DOWNLOADING)
-			pause.setEnabled(true);
-		else
-			pause.setEnabled(false);
+		pause.setEnabled(downloadObject.downloadState == DownloadState.DOWNLOADING);
 		JButton resume = new JButton("Resume");
 		resume.setEnabled(false);
 		JButton cancel = new JButton("Cancel");
-		if (downloadObject.downloadState == DownloadState.DOWNLOADING)
-			pause.setEnabled(true);
-		else
-			pause.setEnabled(false);
 		downloadSpeed.setAlignmentX(JLabel.LEFT_ALIGNMENT);
 		partDone.setAlignmentX(JLabel.LEFT_ALIGNMENT);
 

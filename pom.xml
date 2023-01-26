@@ -6,11 +6,10 @@
 
   <groupId>com.uniqueapps</groupId>
   <artifactId>navixbrowser</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.8</version>
 
   <name>navixbrowser</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
+  <url>https://github.com/UnknownCoder56/navixbrowser</url>
 
   <properties>
     <maven.compiler.source>11</maven.compiler.source>
@@ -23,12 +22,12 @@
     <dependency>
       <groupId>com.formdev</groupId>
       <artifactId>flatlaf</artifactId>
-      <version>2.4</version>
+      <version>3.0</version>
     </dependency>
     <dependency>
       <groupId>me.friwi</groupId>
       <artifactId>jcefmaven</artifactId>
-      <version>104.4.23</version>
+      <version>109.1.11</version>
     </dependency>
   </dependencies>
 

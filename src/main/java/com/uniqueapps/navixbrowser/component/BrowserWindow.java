@@ -5,11 +5,15 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.RenderingHints;
+import java.awt.event.ContainerAdapter;
+import java.awt.event.ContainerEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -38,7 +42,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.border.EmptyBorder;
 
 import org.cef.CefApp;
@@ -63,9 +69,12 @@ public class BrowserWindow extends JFrame {
 
 	private static final long serialVersionUID = -3658310837225120769L;
 
-	public static String version = "1.7";
+	public static String VERSION = "1.8";
+	public static int DEBUG_PORT = 8090;
 
-	protected final CefApp cefApp;
+	static GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
+
+	public final CefApp cefApp;
 	private final CefClient cefClient;
 	private final JTextField browserAddressField;
 	private final JButton homeButton;
@@ -77,6 +86,7 @@ public class BrowserWindow extends JFrame {
 	private final JButton contextMenuButton;
 	public final JProgressBar loadBar;
 	public final BrowserTabbedPane tabbedPane;
+	public final JSplitPane splitPane;
 	public boolean browserIsInFocus = false;
 
 	File cache = new File(".", "cache");
@@ -84,7 +94,7 @@ public class BrowserWindow extends JFrame {
 	File bookmarkFile = new File(Main.userAppData, "bookmarks");
 	private final Map<String, String> bookmarks = new HashMap<>();
 	JPanel bookmarksPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
-	
+
 	@SuppressWarnings("unchecked")
 	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX)
 			throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
@@ -100,10 +110,14 @@ public class BrowserWindow extends JFrame {
 		if (resources.mkdirs()) {
 			Files.copy(getClass().getResourceAsStream("/resources/navix.ico"),
 					new File(new File(".", "resources"), "navix.ico").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/newtab.html"),
-					new File(new File(".", "resources"), "newtab.html").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/style.css"),
-					new File(new File(".", "resources"), "style.css").toPath());
+			Files.copy(getClass().getResourceAsStream("/resources/newtab-dark.html"),
+					new File(new File(".", "resources"), "newtab-dark.html").toPath());
+			Files.copy(getClass().getResourceAsStream("/resources/style-dark.css"),
+					new File(new File(".", "resources"), "style-dark.css").toPath());
+			Files.copy(getClass().getResourceAsStream("/resources/newtab-light.html"),
+					new File(new File(".", "resources"), "newtab-light.html").toPath());
+			Files.copy(getClass().getResourceAsStream("/resources/style-light.css"),
+					new File(new File(".", "resources"), "style-light.css").toPath());
 		}
 
 		if (cefAppX != null) {
@@ -112,9 +126,10 @@ public class BrowserWindow extends JFrame {
 			CefAppBuilder builder = new CefAppBuilder();
 			builder.getCefSettings().windowless_rendering_enabled = useOSR;
 			builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/"
-					+ version;
-			builder.getCefSettings().user_agent_product = "Navix " + version;
+					+ VERSION;
+			builder.getCefSettings().user_agent_product = "Navix " + VERSION;
 			builder.getCefSettings().cache_path = cache.getAbsolutePath();
+			builder.getCefSettings().remote_debugging_port = DEBUG_PORT;
 			builder.setProgressHandler(downloadWindow);
 			if (!Main.settings.HAL)
 				builder.addJcefArgs("--disable-gpu");
@@ -122,7 +137,7 @@ public class BrowserWindow extends JFrame {
 			builder.setAppHandler(new NavixAppHandler());
 			cefApp = builder.build();
 		}
-		
+
 		cefClient = cefApp.createClient();
 
 		bookmarkFile.createNewFile();
@@ -148,6 +163,7 @@ public class BrowserWindow extends JFrame {
 		addBookmarkButton = new JButton();
 		contextMenuButton = new JButton();
 		loadBar = new JProgressBar();
+		splitPane = new JSplitPane();
 		browserAddressField = new JTextField(100) {
 			private static final long serialVersionUID = -6518323374167056051L;
 
@@ -164,7 +180,8 @@ public class BrowserWindow extends JFrame {
 		};
 
 		try {
-			tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav, reloadButton, browserAddressField);
+			tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav, reloadButton,
+					browserAddressField);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -226,26 +243,11 @@ public class BrowserWindow extends JFrame {
 		});
 
 		browserAddressField.setBorder(new RoundedBorder(Color.LIGHT_GRAY.darker(), 1, 28, 5));
-		browserAddressField.setBackground(this.getBackground());
+		browserAddressField.setBackground(new Color(0x0, true));
 		browserAddressField.setFont(new JLabel().getFont());
 
 		backwardNav.setEnabled(false);
 		forwardNav.setEnabled(false);
-
-		homeButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		backwardNav.setBorder(new EmptyBorder(0, 0, 0, 0));
-		forwardNav.setBorder(new EmptyBorder(0, 0, 0, 0));
-		reloadButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		addTabButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		addBookmarkButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		contextMenuButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		homeButton.setBackground(this.getBackground());
-		backwardNav.setBackground(this.getBackground());
-		forwardNav.setBackground(this.getBackground());
-		reloadButton.setBackground(this.getBackground());
-		addTabButton.setBackground(this.getBackground());
-		addBookmarkButton.setBackground(this.getBackground());
-		contextMenuButton.setBackground(this.getBackground());
 
 		try {
 			homeButton.setIcon(new ImageIcon(
@@ -318,16 +320,52 @@ public class BrowserWindow extends JFrame {
 			JMenuItem downloads = new JMenuItem("Downloads");
 			downloads.addActionListener(l1 -> tabbedPane.addDownloadsTab(cefApp));
 			popup.add(downloads);
-			
+
 			JMenuItem settings = new JMenuItem("Settings");
 			settings.addActionListener(l1 -> tabbedPane.addSettingsTab(cefApp));
 			popup.add(settings);
+
+			popup.addSeparator();
+
+			JMenuItem toggleFullscreen = new JMenuItem("Toggle fullscreen");
+			toggleFullscreen.addActionListener(l1 -> {
+				if (device.getFullScreenWindow() != BrowserWindow.this) {
+					BrowserWindow.this.dispose();
+					setUndecorated(true);
+					setExtendedState(JFrame.MAXIMIZED_BOTH);
+					setVisible(true);
+					device.setFullScreenWindow(BrowserWindow.this);
+				} else {
+					BrowserWindow.this.dispose();
+					setUndecorated(false);
+					setVisible(true);
+					device.setFullScreenWindow(null);
+				}
+			});
+			popup.add(toggleFullscreen);
+
+			JMenuItem toggleInspector = new JMenuItem("Toggle inspector");
+			toggleInspector.addActionListener(l1 -> {
+				if (splitPane.getRightComponent() == null) {
+					if (tabbedPane.getSelectedBrowser() != null) {
+						splitPane.setRightComponent(tabbedPane.getSelectedBrowser().getDevTools().getUIComponent());
+						splitPane.setDividerLocation(1000);
+					} else {
+						JOptionPane.showMessageDialog(this, "Cannot open inspector for current tab!");
+					}
+				} else {
+					splitPane.setRightComponent(null);
+				}
+			});
+			popup.add(toggleInspector);
+
+			popup.addSeparator();
 
 			JMenuItem exit = new JMenuItem("Exit");
 			exit.addActionListener(l1 -> System.exit(0));
 			popup.add(exit);
 
-			popup.show(this, contextMenuButton.getX(), contextMenuButton.getY());
+			popup.show(this, this.getWidth(), 0);
 		});
 
 		JPanel separatorPanel = new JPanel() {
@@ -372,10 +410,7 @@ public class BrowserWindow extends JFrame {
 			bookmarkButton.setComponentPopupMenu(popup);
 			bookmarksPanel.add(bookmarkButton);
 		}
-		if (bookmarks.isEmpty())
-			bookmarksPanel.setVisible(false);
-		else
-			bookmarksPanel.setVisible(true);
+		bookmarksPanel.setVisible(!bookmarks.isEmpty());
 
 		loadBar.setVisible(false);
 		loadBar.setIndeterminate(true);
@@ -388,50 +423,57 @@ public class BrowserWindow extends JFrame {
 		gbcX.weightx = 10;
 		bottomPanel.add(bookmarksPanel, gbcX);
 
+		JToolBar toolBar = new JToolBar();
+		toolBar.setMargin(new Insets(3, 2, 3, 2));
+		toolBar.add(addTabButton);
+		toolBar.add(separatorPanel);
+		toolBar.add(backwardNav);
+		toolBar.add(forwardNav);
+		toolBar.add(reloadButton);
+		toolBar.add(homeButton);
+
+		JToolBar toolBar2 = new JToolBar();
+		toolBar.setMargin(new Insets(3, 3, 3, 3));
+		toolBar2.add(addBookmarkButton);
+		toolBar2.add(contextMenuButton);
+
 		GridBagConstraints gbc = new GridBagConstraints();
-
-		gbc.insets = new Insets(5, 3, 8, 3);
-
-		gbc.gridx = 0;
-		gbc.weightx = 0.1;
-		navBar.add(addTabButton, gbc);
-
-		gbc.gridx = 1;
-		gbc.weightx = 0.1;
-		gbc.fill = GridBagConstraints.BOTH;
-		navBar.add(separatorPanel, gbc);
-
-		gbc.gridx = 2;
-		gbc.weightx = 0.1;
-		navBar.add(backwardNav, gbc);
-
-		gbc.gridx = 3;
-		gbc.weightx = 0.1;
-		navBar.add(forwardNav, gbc);
-
-		gbc.gridx = 4;
-		gbc.weightx = 0.1;
-		navBar.add(reloadButton, gbc);
-
-		gbc.gridx = 5;
-		gbc.weightx = 0.1;
-		navBar.add(homeButton, gbc);
-
-		gbc.gridx = 6;
-		gbc.weightx = 50;
-		gbc.fill = GridBagConstraints.BOTH;
+		gbc.weightx = 1;
+		navBar.add(toolBar, gbc);
+		gbc.weightx = 100;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
 		navBar.add(browserAddressField, gbc);
+		gbc.weightx = 1;
+		gbc.fill = GridBagConstraints.NONE;
+		navBar.add(toolBar2, gbc);
 
-		gbc.gridx = 7;
-		gbc.weightx = 0.1;
-		navBar.add(addBookmarkButton, gbc);
+		int defaultSize = splitPane.getDividerSize();
+		splitPane.addContainerListener(new ContainerAdapter() {
+			@Override
+			public void componentAdded(ContainerEvent e) {
+				super.componentAdded(e);
+				if (splitPane.getRightComponent() == null) {
+					splitPane.setDividerSize(0);
+				} else {
+					splitPane.setDividerSize(defaultSize);
+				}
+			}
 
-		gbc.gridx = 8;
-		gbc.weightx = 0.1;
-		navBar.add(contextMenuButton, gbc);
+			@Override
+			public void componentRemoved(ContainerEvent e) {
+				super.componentRemoved(e);
+				if (splitPane.getRightComponent() == null) {
+					splitPane.setDividerSize(0);
+				} else {
+					splitPane.setDividerSize(defaultSize);
+				}
+			}
+		});
+		splitPane.setLeftComponent(tabbedPane);
+		splitPane.setRightComponent(null);
 
 		getContentPane().add(navBar, BorderLayout.NORTH);
-		getContentPane().add(tabbedPane, BorderLayout.CENTER);
+		getContentPane().add(splitPane, BorderLayout.CENTER);
 		getContentPane().add(bottomPanel, BorderLayout.SOUTH);
 	}
 

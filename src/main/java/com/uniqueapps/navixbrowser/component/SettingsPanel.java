@@ -1,27 +1,16 @@
 package com.uniqueapps.navixbrowser.component;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.WindowEvent;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.Main.Theme;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class SettingsPanel extends JPanel {
 
@@ -65,6 +54,12 @@ public class SettingsPanel extends JPanel {
 
 		JCheckBox halEnabled = new JCheckBox();
 		halEnabled.setSelected(Main.settings.HAL);
+		halEnabled.addChangeListener(l -> {
+			if (halEnabled.isSelected() != Main.settings.HAL) {
+				Main.settings.HAL = halEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
 		GridBagConstraints gbc2 = new GridBagConstraints();
 		gbc2.insets = new Insets(5, 1, 5, 0);
 		gbc2.anchor = GridBagConstraints.NORTHWEST;
@@ -83,6 +78,12 @@ public class SettingsPanel extends JPanel {
 
 		JCheckBox osrEnabled = new JCheckBox();
 		osrEnabled.setSelected(Main.settings.OSR);
+		osrEnabled.addChangeListener(l -> {
+			if (osrEnabled.isSelected() != Main.settings.OSR) {
+				Main.settings.OSR = osrEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
 		GridBagConstraints gbc4 = new GridBagConstraints();
 		gbc4.insets = new Insets(5, 1, 5, 0);
 		gbc4.anchor = GridBagConstraints.NORTHWEST;
@@ -102,7 +103,21 @@ public class SettingsPanel extends JPanel {
 
 		JComboBox<String> searchEngineList = new JComboBox<>();
 		searchEngineList.setModel(new DefaultComboBoxModel<>(engines.keySet().toArray(new String[] {})));
-		searchEngineList.setSelectedIndex(engines.values().stream().toList().indexOf(Main.settings.searchEngine));
+		Object[] enginesArray = engines.values().toArray();
+		for (int i = 0; i < enginesArray.length; i++) {
+			if (enginesArray[i].equals(Main.settings.searchEngine)) {
+				searchEngineList.setSelectedIndex(i);
+			}
+		}
+		searchEngineList.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				String selectedEngine = engines.get((String) searchEngineList.getSelectedItem());
+				if (!Objects.equals(selectedEngine, Main.settings.searchEngine)) {
+					Main.settings.searchEngine = selectedEngine;
+					Main.refreshSettings();
+				}
+			}
+		});
 		GridBagConstraints gbc6 = new GridBagConstraints();
 		gbc6.insets = new Insets(5, 5, 5, 0);
 		gbc6.anchor = GridBagConstraints.NORTH;
@@ -123,6 +138,27 @@ public class SettingsPanel extends JPanel {
 
 		JComboBox<Theme> themeList = new JComboBox<>();
 		themeList.setModel(new DefaultComboBoxModel<>(Theme.values()));
+		themeList.setSelectedItem(Main.settings.theme);
+		themeList.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				Theme selectedTheme = (Theme) themeList.getSelectedItem();
+				if (selectedTheme != Main.settings.theme) {
+					Main.settings.theme = selectedTheme;
+					Main.refreshSettings();
+					try {
+						if (Main.settings.theme == Theme.Dark) {
+							UIManager.setLookAndFeel(new FlatDarkLaf());
+						} else {
+							UIManager.setLookAndFeel(new FlatLightLaf());
+						}
+					} catch (UnsupportedLookAndFeelException e1) {
+						e1.printStackTrace();
+					}
+					SwingUtilities.updateComponentTreeUI(browserWindow);
+					browserWindow.tabbedPane.applyThemeChange();
+				}
+			}
+		});
 		GridBagConstraints gbc8 = new GridBagConstraints();
 		gbc8.insets = new Insets(5, 5, 5, 0);
 		gbc8.anchor = GridBagConstraints.NORTH;
@@ -131,7 +167,7 @@ public class SettingsPanel extends JPanel {
 		gbc8.gridx = 1;
 		gbc8.gridy = 4;
 		panel.add(themeList, gbc8);
-		
+
 		JLabel launchMaximized = new JLabel("Launch maximized");
 		launchMaximized.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GridBagConstraints gbc9 = new GridBagConstraints();
@@ -140,9 +176,15 @@ public class SettingsPanel extends JPanel {
 		gbc9.gridx = 0;
 		gbc9.gridy = 5;
 		panel.add(launchMaximized, gbc9);
-		
+
 		JCheckBox launchMaximizedEnabled = new JCheckBox();
 		launchMaximizedEnabled.setSelected(Main.settings.launchMaximized);
+		launchMaximizedEnabled.addChangeListener(l -> {
+			if (launchMaximizedEnabled.isSelected() != Main.settings.launchMaximized) {
+				Main.settings.launchMaximized = launchMaximizedEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
 		GridBagConstraints gbc10 = new GridBagConstraints();
 		gbc10.insets = new Insets(5, 1, 5, 0);
 		gbc10.anchor = GridBagConstraints.NORTHWEST;
@@ -150,54 +192,12 @@ public class SettingsPanel extends JPanel {
 		gbc10.gridy = 5;
 		panel.add(launchMaximizedEnabled, gbc10);
 
-		JPanel confirmationButtons = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-
-		JButton cancel = new JButton("Cancel");
-		cancel.addActionListener(l -> {
-			halEnabled.setSelected(Main.settings.HAL);
-			osrEnabled.setSelected(Main.settings.OSR);
-			searchEngineList.setSelectedIndex(engines.values().stream().toList().indexOf(Main.settings.searchEngine));
-			themeList.setSelectedItem(Main.settings.theme);
-		});
-
-		JButton ok = new JButton("OK");
-		ok.addActionListener(l -> {
-			if (Main.settings.HAL != halEnabled.isSelected() || Main.settings.OSR != osrEnabled.isSelected()) {
-				Main.settings.HAL = halEnabled.isSelected();
-				Main.settings.OSR = osrEnabled.isSelected();
-				Main.settings.launchMaximized = launchMaximizedEnabled.isSelected();
-				Main.settings.searchEngine = engines.get(searchEngineList.getSelectedItem());
-				Main.settings.theme = (Theme) themeList.getSelectedItem();
-				Main.refreshSettings();
-				JOptionPane.showMessageDialog(this, "App will shut down to apply changes. Relaunch it.");
-				browserWindow.dispatchEvent(new WindowEvent(browserWindow, WindowEvent.WINDOW_CLOSING));
-			} else {
-				Main.settings.HAL = halEnabled.isSelected();
-				Main.settings.OSR = osrEnabled.isSelected();
-				Main.settings.launchMaximized = launchMaximizedEnabled.isSelected();
-				Main.settings.searchEngine = engines.get(searchEngineList.getSelectedItem());
-				Main.settings.theme = (Theme) themeList.getSelectedItem();
-				Main.refreshSettings();
-				JOptionPane.showMessageDialog(this, "App will be restarted to apply settings.");
-				browserWindow.setVisible(false);
-				browserWindow.dispose();
-				Main.start(browserWindow.cefApp);
-			}
-		});
-
-		confirmationButtons.add(ok);
-		confirmationButtons.add(cancel);
-
-		GridBagConstraints gbc11 = new GridBagConstraints();
-		gbc11.anchor = GridBagConstraints.SOUTHEAST;
-		gbc11.gridx = 1;
-		gbc11.gridy = 7;
-		panel.add(confirmationButtons, gbc11);
+		JLabel bottomInfo = new JLabel("Version " + BrowserWindow.VERSION + " (Chromium "
+				+ browserWindow.cefApp.getVersion().getChromeVersion() + ")."
+				+ " Changes to graphics settings will be applied on next launch.");
 
 		supreme.add(new JScrollPane(parent), BorderLayout.CENTER);
+		supreme.add(bottomInfo, BorderLayout.SOUTH);
 		add(supreme);
-		
-		searchEngineList.setSelectedIndex(engines.values().stream().toList().indexOf(Main.settings.searchEngine));
-		themeList.setSelectedItem(Main.settings.theme);
 	}
 }

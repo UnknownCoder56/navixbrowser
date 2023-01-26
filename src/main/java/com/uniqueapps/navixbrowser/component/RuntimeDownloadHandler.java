@@ -53,8 +53,6 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
 			label.setText(cap + " runtime...");
 			if (percent != -1F) {
 				progressBar.setValue(Math.round(percent));
-			} else {
-				System.out.println(state);
 			}
 		} else {
 			throw new RuntimeException("State cannot be null!");

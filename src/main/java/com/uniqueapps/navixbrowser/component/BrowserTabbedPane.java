@@ -191,13 +191,19 @@ public class BrowserTabbedPane extends JTabbedPane {
 				forwardNav.setEnabled(false);
 				backwardNav.setEnabled(false);
 				reloadButton.setEnabled(false);
-			} else if (!getSelectedBrowser().getURL().contains("newtab.html")) {
+				if (windowFrame.splitPane.getRightComponent() != null) {
+					windowFrame.splitPane.setRightComponent(null);
+				}
+			} else if (!getSelectedBrowser().getURL().contains("newtab-dark.html") && !getSelectedBrowser().getURL().contains("newtab-light.html")) {
 				browserField.setEnabled(true);
 				homeButton.setEnabled(true);
 				forwardNav.setEnabled(getSelectedBrowser().canGoForward());
 				backwardNav.setEnabled(getSelectedBrowser().canGoBack());
 				reloadButton.setEnabled(true);
 				browserField.setText(getSelectedBrowser().getURL());
+				if (windowFrame.splitPane.getRightComponent() != null) {
+					windowFrame.splitPane.setRightComponent(null);
+				}
 			} else {
 				browserField.setEnabled(true);
 				homeButton.setEnabled(true);
@@ -205,6 +211,9 @@ public class BrowserTabbedPane extends JTabbedPane {
 				backwardNav.setEnabled(getSelectedBrowser().canGoBack());
 				reloadButton.setEnabled(true);
 				browserField.setText("navix://home");
+				if (windowFrame.splitPane.getRightComponent() != null) {
+					windowFrame.splitPane.setRightComponent(null);
+				}
 			}
 		});
 	}
@@ -274,11 +283,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 	}
 
 	public CefBrowser getSelectedBrowser() {
-		if (browserComponentMap.containsKey(getSelectedComponent())) {
-			return browserComponentMap.get(getSelectedComponent());
-		} else {
-			return null;
-		}
+		return browserComponentMap.getOrDefault(getSelectedComponent(), null);
 	}
 
 	public static JPanel generateTabPanel(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane, CefApp cefApp,
@@ -309,9 +314,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 			try {
 				tabInfoLabel.setIcon(new ImageIcon(
 						ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + cefBrowser.getURL()))));
-			} catch (IOException e) {
-				System.out.println("Could not get favicon for: " + cefBrowser.getURL());
-			}
+			} catch (IOException ignored) { }
 		});
 		tabPanel.add(tabInfoLabel, BorderLayout.CENTER);
 		JButton closeTabButton = new JButton();
@@ -440,5 +443,29 @@ public class BrowserTabbedPane extends JTabbedPane {
 		});
 		tabPanel.add(closeTabButton, BorderLayout.EAST);
 		return tabPanel;
+	}
+	
+	public void applyThemeChange() {
+		setUI(new BasicTabbedPaneUI() {
+			final Insets insets = new Insets(0, 0, 0, 0);
+
+			@Override
+			protected Insets getTabInsets(int tabPlacement, int tabIndex) {
+				return insets;
+			}
+
+			@Override
+			protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h,
+					boolean isSelected) {
+			}
+		});
+		for (int i = 0; i < getTabCount(); i++) {
+			var browser = browserComponentMap.get(getComponentAt(i));
+			if (browser != null) {
+				if (browser.getURL().contains("newtab-dark.html") || browser.getURL().contains("newtab-light.html")) {
+					browser.loadURL("navix://home");
+				}
+			}
+		}
 	}
 }

@@ -2,6 +2,7 @@ package com.uniqueapps.navixbrowser.handler;
 
 import java.awt.Component;
 import java.awt.HeadlessException;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -10,7 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutionException;
+import java.util.Vector;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
@@ -22,6 +23,7 @@ import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefContextMenuParams;
+import org.cef.callback.CefContextMenuParams.EditStateFlags;
 import org.cef.callback.CefContextMenuParams.MediaType;
 import org.cef.callback.CefMenuModel;
 import org.cef.handler.CefContextMenuHandlerAdapter;
@@ -33,26 +35,26 @@ import com.uniqueapps.navixbrowser.object.TransferableImage;
 
 public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 
-	private static final int BACK = 25600;
-	private static final int FORWARD = 25601;
-	private static final int REFRESH = 25602;
-	private static final int ZOOM_IN = 25603;
-	private static final int ZOOM_OUT = 25604;
-	private static final int ZOOM_RESET = 25605;
-	private static final int SCREENSHOT = 25606;
-	private static final int VIEW_PAGE_SOURCE = 25607;
-	private static final int INSPECT = 25608;
-	private static final int CANCEL = 25609;
+	private static final int BACK = 26500;
+	private static final int FORWARD = 26501;
+	private static final int REFRESH = 26502;
+	private static final int ZOOM_IN = 26503;
+	private static final int ZOOM_OUT = 26504;
+	private static final int ZOOM_RESET = 26505;
+	private static final int SCREENSHOT = 26506;
+	private static final int VIEW_PAGE_SOURCE = 26507;
+	private static final int INSPECT = 26508;
+	private static final int CANCEL = 26509;
 
-	private static final int COPY = 25610;
-	private static final int SAVE_AS = 25611;
+	private static final int COPY = 26510;
+	private static final int SAVE_AS = 26511;
 
-	private static final int OPEN_IN_NEW_TAB = 25612;
-	private static final int SEARCH_IN_NEW_TAB = 25613;
+	private static final int OPEN_IN_NEW_TAB = 26512;
+	private static final int SEARCH_IN_NEW_TAB = 26513;
 
-	private static final int COPY_IMAGE_LINK = 25614;
+	private static final int COPY_IMAGE_LINK = 26514;
 
-	private static final int COPY_LINK_ADDRESS = 25615;
+	private static final int COPY_LINK_ADDRESS = 26515;
 
 	CefApp cefApp;
 	BrowserWindow browserWindow;
@@ -70,7 +72,74 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 		model.clear();
 
 		if (params.getMediaType() != MediaType.CM_MEDIATYPE_IMAGE) {
-			if (params.getSelectionText() != null && !params.getSelectionText().isEmpty()) {
+			if (params.isEditable()) {
+				Vector<String> suggestions = new Vector<>();
+				params.getDictionarySuggestions(suggestions);
+				switch (suggestions.size()) {
+				case 0:
+					break;
+				case 1:
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.get(0));
+					model.addSeparator();
+					break;
+				case 2:
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.get(0));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_1, suggestions.get(1));
+					model.addSeparator();
+					break;
+				case 3:
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.get(0));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_1, suggestions.get(1));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_2, suggestions.get(2));
+					model.addSeparator();
+					break;
+				case 4:
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.get(0));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_1, suggestions.get(1));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_2, suggestions.get(2));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_3, suggestions.get(3));
+					model.addSeparator();
+					break;
+				case 5:
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.get(0));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_1, suggestions.get(1));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_2, suggestions.get(2));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_3, suggestions.get(3));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_4, suggestions.get(4));
+					model.addSeparator();
+					break;
+				default:
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_0, suggestions.get(0));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_1, suggestions.get(1));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_2, suggestions.get(2));
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SPELLCHECK_SUGGESTION_3, suggestions.get(3));
+					model.addSeparator();
+					break;
+				}
+				if ((params.getEditStateFlags()
+						& EditStateFlags.CM_EDITFLAG_CAN_CUT) == EditStateFlags.CM_EDITFLAG_CAN_CUT) {
+					model.addItem(CefMenuModel.MenuId.MENU_ID_CUT, "Cut");
+				}
+				if ((params.getEditStateFlags()
+						& EditStateFlags.CM_EDITFLAG_CAN_COPY) == EditStateFlags.CM_EDITFLAG_CAN_COPY) {
+					model.addItem(CefMenuModel.MenuId.MENU_ID_COPY, "Copy");
+				}
+				if ((params.getEditStateFlags()
+						& EditStateFlags.CM_EDITFLAG_CAN_PASTE) == EditStateFlags.CM_EDITFLAG_CAN_PASTE) {
+					model.addItem(CefMenuModel.MenuId.MENU_ID_PASTE, "Paste");
+				}
+				if ((params.getEditStateFlags()
+						& EditStateFlags.CM_EDITFLAG_CAN_DELETE) == EditStateFlags.CM_EDITFLAG_CAN_DELETE) {
+					model.addItem(CefMenuModel.MenuId.MENU_ID_DELETE, "Delete");
+				}
+				if ((params.getEditStateFlags()
+						& EditStateFlags.CM_EDITFLAG_CAN_SELECT_ALL) == EditStateFlags.CM_EDITFLAG_CAN_SELECT_ALL) {
+					model.addItem(CefMenuModel.MenuId.MENU_ID_SELECT_ALL, "Select All");
+				}
+				model.addSeparator();
+				model.addItem(INSPECT, "Inspect");
+				model.addSeparator();
+			} else if (params.getSelectionText() != null && !params.getSelectionText().isEmpty()) {
 				model.addItem(COPY, "Copy");
 				if (isValidURL(params.getSelectionText())) {
 					model.addItem(OPEN_IN_NEW_TAB, "Open in new tab");
@@ -78,7 +147,8 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 					model.addItem(SEARCH_IN_NEW_TAB, "Search for text in new tab");
 				}
 				model.addSeparator();
-				model.addItem(CANCEL, "Cancel");
+				model.addItem(INSPECT, "Inspect");
+				model.addSeparator();
 			} else if (params.getLinkUrl() != null && !params.getLinkUrl().isEmpty()) {
 				if (isValidURL(params.getLinkUrl())) {
 					model.addItem(OPEN_IN_NEW_TAB, "Open in new tab");
@@ -88,7 +158,8 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 						}
 					}
 					model.addSeparator();
-					model.addItem(CANCEL, "Cancel");
+					model.addItem(INSPECT, "Inspect");
+					model.addSeparator();
 				}
 			} else {
 				if (browser.canGoBack())
@@ -106,15 +177,16 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 				model.addItem(VIEW_PAGE_SOURCE, "View page source");
 				model.addItem(INSPECT, "Inspect");
 				model.addSeparator();
-				model.addItem(CANCEL, "Cancel");
 			}
 		} else {
 			model.addItem(COPY, "Copy image");
 			model.addItem(COPY_IMAGE_LINK, "Copy image link");
 			model.addItem(SAVE_AS, "Save image as");
 			model.addSeparator();
-			model.addItem(CANCEL, "Cancel");
+			model.addItem(INSPECT, "Inspect");
+			model.addSeparator();
 		}
+		model.addItem(CANCEL, "Cancel");
 	}
 
 	@Override
@@ -126,8 +198,17 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 		var success = true;
 
 		if (params.getMediaType() != MediaType.CM_MEDIATYPE_IMAGE) {
-			String selectedText = params.getSelectionText();
-			if (selectedText != null && !selectedText.isEmpty()) {
+			if (params.isEditable()) {
+				// Default JCEF handlers
+				if (commandId == INSPECT) {
+					browserWindow.splitPane.setRightComponent(
+							browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
+					browserWindow.splitPane.setDividerLocation(1000);
+					return true;
+				}
+				return false;
+			} else if (params.getSelectionText() != null && !params.getSelectionText().isEmpty()) {
+				String selectedText = params.getSelectionText();
 				if (commandId == COPY) {
 					Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(selectedText),
 							null);
@@ -142,6 +223,11 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 								Main.settings.OSR, false);
 					}
 				}
+				if (commandId == INSPECT) {
+					browserWindow.splitPane.setRightComponent(
+							browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
+					browserWindow.splitPane.setDividerLocation(1000);
+				}
 			} else if (params.getLinkUrl() != null && !params.getLinkUrl().isEmpty()) {
 				if (isValidURL(params.getLinkUrl())) {
 					if (commandId == OPEN_IN_NEW_TAB) {
@@ -154,6 +240,11 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 										.setContents(new StringSelection(params.getUnfilteredLinkUrl()), null);
 							}
 						}
+					}
+					if (commandId == INSPECT) {
+						browserWindow.splitPane.setRightComponent(browser
+								.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
+						browserWindow.splitPane.setDividerLocation(1000);
 					}
 				}
 			} else {
@@ -201,14 +292,19 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 								}
 							}
 							UIManager.setLookAndFeel(new FlatDarkLaf());
-						} catch (InterruptedException | ExecutionException | IOException | ClassNotFoundException
-								| InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					}).start();
 					break;
 				case VIEW_PAGE_SOURCE:
-					browser.viewSource();
+					browserWindow.tabbedPane.addBrowserTab(cefApp, "view-source:" + frame.getURL(), Main.settings.OSR,
+							false);
+					break;
+				case INSPECT:
+					browserWindow.splitPane.setRightComponent(
+							browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
+					browserWindow.splitPane.setDividerLocation(1000);
 					break;
 				default:
 					success = false;
@@ -251,6 +347,10 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 					}
 				}).start();
 				break;
+			case INSPECT:
+				browserWindow.splitPane.setRightComponent(
+						browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
+				browserWindow.splitPane.setDividerLocation(1000);
 			default:
 				success = false;
 				break;
