@@ -192,7 +192,7 @@ public class SettingsPanel extends JPanel {
 		gbc10.gridy = 5;
 		panel.add(launchMaximizedEnabled, gbc10);
 
-		JLabel bottomInfo = new JLabel("Version " + BrowserWindow.VERSION + " (Chromium "
+		JLabel bottomInfo = new JLabel("Version " + Main.VERSION + " (Chromium "
 				+ browserWindow.cefApp.getVersion().getChromeVersion() + ")."
 				+ " Changes to graphics settings will be applied on next launch.");
 

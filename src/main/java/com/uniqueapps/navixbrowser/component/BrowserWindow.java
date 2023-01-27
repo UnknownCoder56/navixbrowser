@@ -1,30 +1,21 @@
 package com.uniqueapps.navixbrowser.component;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.KeyboardFocusManager;
-import java.awt.RenderingHints;
-import java.awt.event.ContainerAdapter;
-import java.awt.event.ContainerEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.handler.*;
+import com.uniqueapps.navixbrowser.listener.NavixComponentListener;
+import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
+import me.friwi.jcefmaven.CefInitializationException;
+import me.friwi.jcefmaven.UnsupportedPlatformException;
+import org.cef.CefApp;
+import org.cef.CefClient;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -32,45 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JProgressBar;
-import javax.swing.JSplitPane;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.border.EmptyBorder;
-
-import org.cef.CefApp;
-import org.cef.CefClient;
-
-import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.handler.NavixAppHandler;
-import com.uniqueapps.navixbrowser.handler.NavixContextMenuHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDownloadHandler;
-import com.uniqueapps.navixbrowser.handler.NavixFocusHandler;
-import com.uniqueapps.navixbrowser.handler.NavixLoadHandler;
-import com.uniqueapps.navixbrowser.listener.NavixComponentListener;
-import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
-
-import me.friwi.jcefmaven.CefAppBuilder;
-import me.friwi.jcefmaven.CefInitializationException;
-import me.friwi.jcefmaven.UnsupportedPlatformException;
-
 public class BrowserWindow extends JFrame {
 
 	private static final long serialVersionUID = -3658310837225120769L;
-
-	public static String VERSION = "1.8";
-	public static int DEBUG_PORT = 8090;
 
 	static GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
 
@@ -89,8 +44,6 @@ public class BrowserWindow extends JFrame {
 	public final JSplitPane splitPane;
 	public boolean browserIsInFocus = false;
 
-	File cache = new File(".", "cache");
-
 	File bookmarkFile = new File(Main.userAppData, "bookmarks");
 	private final Map<String, String> bookmarks = new HashMap<>();
 	JPanel bookmarksPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
@@ -98,13 +51,6 @@ public class BrowserWindow extends JFrame {
 	@SuppressWarnings("unchecked")
 	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX)
 			throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
-
-		RuntimeDownloadHandler downloadWindow = new RuntimeDownloadHandler(this);
-		if (!new File(".", "jcef-bundle").exists()) {
-			downloadWindow.setVisible(true);
-		}
-
-		cache.mkdir();
 
 		File resources = new File(".", "resources");
 		if (resources.mkdirs()) {
@@ -120,24 +66,7 @@ public class BrowserWindow extends JFrame {
 					new File(new File(".", "resources"), "style-light.css").toPath());
 		}
 
-		if (cefAppX != null) {
-			cefApp = cefAppX;
-		} else {
-			CefAppBuilder builder = new CefAppBuilder();
-			builder.getCefSettings().windowless_rendering_enabled = useOSR;
-			builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/"
-					+ VERSION;
-			builder.getCefSettings().user_agent_product = "Navix " + VERSION;
-			builder.getCefSettings().cache_path = cache.getAbsolutePath();
-			builder.getCefSettings().remote_debugging_port = DEBUG_PORT;
-			builder.setProgressHandler(downloadWindow);
-			if (!Main.settings.HAL)
-				builder.addJcefArgs("--disable-gpu");
-			builder.addJcefArgs("--enable-media-stream");
-			builder.setAppHandler(new NavixAppHandler());
-			cefApp = builder.build();
-		}
-
+		cefApp = cefAppX;
 		cefClient = cefApp.createClient();
 
 		bookmarkFile.createNewFile();
@@ -186,7 +115,7 @@ public class BrowserWindow extends JFrame {
 			throw new RuntimeException(e);
 		}
 
-		downloadWindow.setVisible(false);
+		Main.downloadWindow.setVisible(false);
 
 		addCefHandlers();
 		addListeners();

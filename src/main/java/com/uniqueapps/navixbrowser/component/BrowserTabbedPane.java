@@ -57,7 +57,9 @@ public class BrowserTabbedPane extends JTabbedPane {
 	JTextField browserField;
 	public static Map<Component, CefBrowser> browserComponentMap = new HashMap<>();
 	private static final ImageIcon closeImage;
-	private static final Color cornflowerBlue = new Color(100, 149, 237);
+	private static final Color activeTabColor = new Color(46, 57, 115);
+	private static final Color inactiveTabColorDarkMode = Color.DARK_GRAY.darker();
+	private static final Color inactiveTabColorLightMode = Color.GRAY;
 
 	private boolean dragging = false;
 	private Point currentMouseLocation = null;
@@ -181,7 +183,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 			for (int i = 0; i < getTabCount(); i++) {
 				Component c = getTabComponentAt(i);
 				if (c != null) {
-					c.setBackground(getSelectedIndex() == i ? cornflowerBlue : Color.GRAY);
+					c.setBackground(getSelectedIndex() == i ? activeTabColor : getInactiveTabColor());
 				}
 			}
 			if (getSelectedBrowser() == null) {
@@ -306,9 +308,9 @@ public class BrowserTabbedPane extends JTabbedPane {
 				g2d.fill(panelArea);
 			}
 		};
-		tabPanel.setBackground(highlightTab ? cornflowerBlue : Color.GRAY);
+		tabPanel.setBackground(highlightTab ? activeTabColor : getInactiveTabColor());
 		JLabel tabInfoLabel = new JLabel(newTitle);
-		tabInfoLabel.setForeground(Color.BLACK);
+		tabInfoLabel.setForeground(Color.WHITE);
 		tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		SwingUtilities.invokeLater(() -> {
 			try {
@@ -362,9 +364,9 @@ public class BrowserTabbedPane extends JTabbedPane {
 				g2d.fill(panelArea);
 			}
 		};
-		tabPanel.setBackground(highlightTab ? cornflowerBlue : Color.GRAY);
+		tabPanel.setBackground(highlightTab ? activeTabColor : getInactiveTabColor());
 		JLabel tabInfoLabel = new JLabel("Settings");
-		tabInfoLabel.setForeground(Color.BLACK);
+		tabInfoLabel.setForeground(Color.WHITE);
 		tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabPanel.add(tabInfoLabel, BorderLayout.CENTER);
 		JButton closeTabButton = new JButton();
@@ -412,9 +414,9 @@ public class BrowserTabbedPane extends JTabbedPane {
 				g2d.fill(panelArea);
 			}
 		};
-		tabPanel.setBackground(highlightTab ? cornflowerBlue : Color.GRAY);
+		tabPanel.setBackground(highlightTab ? activeTabColor : getInactiveTabColor());
 		JLabel tabInfoLabel = new JLabel("Downloads");
-		tabInfoLabel.setForeground(Color.BLACK);
+		tabInfoLabel.setForeground(Color.WHITE);
 		tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabPanel.add(tabInfoLabel, BorderLayout.CENTER);
 		JButton closeTabButton = new JButton();
@@ -467,5 +469,9 @@ public class BrowserTabbedPane extends JTabbedPane {
 				}
 			}
 		}
+	}
+
+	private static Color getInactiveTabColor() {
+		return Main.settings.theme == Theme.Dark ? inactiveTabColorDarkMode : inactiveTabColorLightMode;
 	}
 }

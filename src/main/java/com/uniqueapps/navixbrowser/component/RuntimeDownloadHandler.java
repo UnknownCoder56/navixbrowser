@@ -18,13 +18,11 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
 	
 	static final long serialVersionUID = -1763136977454349368L;
 
-	BrowserWindow browser;
 	JProgressBar progressBar = new JProgressBar();
 	JLabel label = new JLabel("Preparing runtime...");
 	
-	public RuntimeDownloadHandler(BrowserWindow browser) {
+	public RuntimeDownloadHandler() {
         super();
-        this.browser = browser;
         label.setFont(label.getFont().deriveFont(20.0F));
         label.setHorizontalAlignment(JLabel.CENTER);
         label.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -33,17 +31,18 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.add(label, BorderLayout.CENTER);
+        add(label, BorderLayout.CENTER);
         progressBar.setBorder(new EmptyBorder(5, 5, 5, 5));
         progressBar.setValue(0);
-        this.add(progressBar, BorderLayout.SOUTH);
-        this.setSize(400, 300);
+        add(progressBar, BorderLayout.SOUTH);
+        setSize(400, 300);
         try {
-			this.setIconImage(ImageIO.read(getClass().getResourceAsStream("/images/navix.png")));
+			setIconImage(ImageIO.read(getClass().getResourceAsStream("/images/navix.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        this.setLocationRelativeTo(null);
+		setResizable(false);
+        setLocationRelativeTo(null);
     }
 
 	@Override
