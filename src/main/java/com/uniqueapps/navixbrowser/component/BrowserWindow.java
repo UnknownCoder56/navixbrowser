@@ -164,12 +164,6 @@ public class BrowserWindow extends JFrame {
 				browserAddressField.requestFocusInWindow();
 			}
 		});
-		browserAddressField.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				browserAddressField.selectAll();
-			}
-		});
 
 		browserAddressField.setBorder(new RoundedBorder(Color.LIGHT_GRAY.darker(), 1, 28, 5));
 		browserAddressField.setBackground(new Color(0x0, true));
@@ -181,25 +175,25 @@ public class BrowserWindow extends JFrame {
 		try {
 			homeButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/home.png")))
-							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 			backwardNav.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/left-arrow.png")))
-							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 			forwardNav.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/right-arrow.png")))
-							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 			reloadButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/reload.png")))
-							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 			addTabButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/add.png")))
-							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 			addBookmarkButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/bookmark.png")))
-							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 			contextMenuButton.setIcon(new ImageIcon(
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/menu-bar.png")))
-							.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH)));
+							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
