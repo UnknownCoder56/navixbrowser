@@ -207,12 +207,14 @@ public class BrowserWindow extends JFrame {
 		addTabButton.addActionListener(l -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
 		addBookmarkButton.addActionListener(l -> {
 			String name = JOptionPane.showInputDialog("Bookmark name", "New Bookmark");
-			String url = JOptionPane.showInputDialog("URL",
-					tabbedPane.getSelectedBrowser() != null ? tabbedPane.getSelectedBrowser().getURL()
-							: "https://google.com/");
-			if (url != null && name != null) {
-				bookmarks.put(name, url);
-				refreshBookmarks();
+			if (name != null) {
+				String url = JOptionPane.showInputDialog("URL",
+						tabbedPane.getSelectedBrowser() != null ? tabbedPane.getSelectedBrowser().getURL()
+								: "https://google.com/");
+				if (url != null) {
+					bookmarks.put(name, url);
+					refreshBookmarks();
+				}
 			}
 		});
 		contextMenuButton.addActionListener(l -> {

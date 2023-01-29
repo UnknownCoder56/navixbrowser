@@ -1,24 +1,20 @@
 package com.uniqueapps.navixbrowser.handler;
 
-import java.awt.Component;
-import java.awt.HeadlessException;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
-import javax.swing.JFileChooser;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
@@ -263,28 +259,32 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                     case SCREENSHOT:
                         new Thread(() -> {
                             try {
+                                BufferedImage screenshot = Main.settings.OSR ?
+                                        browser.createScreenshot(true).get() :
+                                        getComponentScreenshot(browser.getUIComponent());
                                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                                 JFileChooser chooser = new JFileChooser();
-                                if (Main.settings.OSR) {
-                                    chooser.setSelectedFile(new File("Navix_Screenshot_" + LocalDateTime.now() + ".jpg"));
-                                    chooser.setFileFilter(new FileNameExtensionFilter("JPG image", ".jpg"));
-                                } else {
-                                    chooser.setSelectedFile(new File("Navix_Screenshot_" + LocalDateTime.now() + ".bmp"));
-                                    chooser.setFileFilter(new FileNameExtensionFilter("Bitmap image", ".bmp"));
-                                }
-                                int option = chooser.showSaveDialog(browserWindow);
-                                if (option == JFileChooser.APPROVE_OPTION) {
-                                    if (Main.settings.OSR) {
-                                        ImageIO.write(browser.createScreenshot(false).get(), "jpg",
-                                                chooser.getSelectedFile());
+                                chooser.setSelectedFile(new File("Navix_Screenshot_" + LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE) + (Main.settings.OSR ? ".jpg" : ".bmp")));
+                                chooser.setFileFilter(new FileNameExtensionFilter(Main.settings.OSR ? "JPEG image" : "Bitmap image", Main.settings.OSR ? ".jpg" : ".bmp"));
+                                int option1 = chooser.showSaveDialog(browserWindow);
+                                if (option1 == JFileChooser.APPROVE_OPTION) {
+                                    if (!chooser.getSelectedFile().createNewFile()) {
+                                        int option2 = JOptionPane.showConfirmDialog(browserWindow,
+                                                "File \"" + chooser.getSelectedFile().getName() +
+                                                        "\" already exists. Do you want to overwrite it?",
+                                                "File already exists",
+                                                JOptionPane.YES_NO_OPTION,
+                                                JOptionPane.WARNING_MESSAGE);
+                                        if (option2 == JOptionPane.YES_OPTION) {
+                                            ImageIO.write(screenshot, Main.settings.OSR ? "jpg" : "bmp",
+                                                    chooser.getSelectedFile());
+                                        }
                                     } else {
-                                        ImageIO.write(
-                                                getComponentScreenshot(
-                                                        browserWindow.tabbedPane.getSelectedBrowser().getUIComponent()),
-                                                "bmp", chooser.getSelectedFile());
+                                        ImageIO.write(screenshot, Main.settings.OSR ? "jpg" : "bmp",
+                                                chooser.getSelectedFile());
                                     }
                                 }
-                                UIManager.setLookAndFeel(new FlatDarkLaf());
+                                UIManager.setLookAndFeel(Main.settings.theme == Main.Theme.Dark ? new FlatDarkLaf() : new FlatLightLaf());
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -343,7 +343,7 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                 case INSPECT:
                     browserWindow.splitPane.setRightComponent(
                             browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
-                    browserWindow.splitPane.setDividerLocation(1000);
+                    browserWindow.splitPane.setDividerLocation(0.7);
                 default:
                     success = false;
                     break;
@@ -362,10 +362,14 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
     }
 
     public BufferedImage getComponentScreenshot(Component component) {
-        Rectangle componentRect = component.getBounds();
-        BufferedImage bufferedImage = new BufferedImage(componentRect.width, componentRect.height,
-                BufferedImage.TYPE_INT_ARGB);
-        component.paint(bufferedImage.getGraphics());
-        return bufferedImage;
+        Point point = component.getLocationOnScreen();
+        Dimension dimension = component.getSize();
+        Rectangle rectangle = new Rectangle(point, dimension);
+        try {
+            Robot robot = new Robot();
+            return robot.createScreenCapture(rectangle);
+        } catch (AWTException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
