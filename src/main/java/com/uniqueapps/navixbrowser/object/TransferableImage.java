@@ -1,10 +1,9 @@
 package com.uniqueapps.navixbrowser.object;
 
-import java.awt.Image;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
 
 public class TransferableImage implements Transferable {
 
@@ -14,7 +13,7 @@ public class TransferableImage implements Transferable {
 		this.i = i;
 	}
 
-	public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+	public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
 		if (flavor.equals(DataFlavor.imageFlavor) && i != null) {
 			return i;
 		} else {
@@ -30,8 +29,8 @@ public class TransferableImage implements Transferable {
 
 	public boolean isDataFlavorSupported(DataFlavor flavor) {
 		DataFlavor[] flavors = getTransferDataFlavors();
-		for (int i = 0; i < flavors.length; i++) {
-			if (flavor.equals(flavors[i])) {
+		for (DataFlavor dataFlavor : flavors) {
+			if (flavor.equals(dataFlavor)) {
 				return true;
 			}
 		}

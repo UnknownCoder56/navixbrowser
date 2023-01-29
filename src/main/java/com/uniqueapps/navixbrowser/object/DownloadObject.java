@@ -7,11 +7,11 @@ public class DownloadObject implements Serializable {
 
 	private static final long serialVersionUID = 4776520847715022370L;
 
-	public static enum DownloadState {
+	public enum DownloadState {
 		DOWNLOADING, FINISHED
 	}
 	
-	public static enum DownloadAction {
+	public enum DownloadAction {
 		PAUSE, RESUME, CANCEL
 	}
 

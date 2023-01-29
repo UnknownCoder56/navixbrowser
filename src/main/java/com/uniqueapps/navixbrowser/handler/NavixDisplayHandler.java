@@ -33,9 +33,11 @@ public class NavixDisplayHandler extends CefDisplayHandlerAdapter {
 		if (BrowserTabbedPane.browserComponentMap.containsValue(cefBrowser)) {
 			try {
 				if (tabbedPane.getSelectedBrowser() == cefBrowser) {
+					tabbedPane.setTitleAt(tabbedPane.indexOfComponent(cefBrowser.getUIComponent()), newTitle);
 					tabbedPane.setTabComponentAt(tabbedPane.indexOfComponent(cefBrowser.getUIComponent()),
 							generateTabPanel(windowFrame, tabbedPane, cefApp, cefBrowser, newTitle, true));
 				} else {
+					tabbedPane.setTitleAt(tabbedPane.indexOfComponent(cefBrowser.getUIComponent()), newTitle);
 					tabbedPane.setTabComponentAt(tabbedPane.indexOfComponent(cefBrowser.getUIComponent()),
 							generateTabPanel(windowFrame, tabbedPane, cefApp, cefBrowser, newTitle, false));
 				}

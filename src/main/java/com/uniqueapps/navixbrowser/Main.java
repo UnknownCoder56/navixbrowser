@@ -57,6 +57,7 @@ public class Main {
         } catch (UnsupportedLookAndFeelException e) {
             throw new RuntimeException(e);
         }
+
         downloadWindow = new RuntimeDownloadHandler();
 		CefApp cefApp = createCefApp();
 		SwingUtilities.invokeLater(()-> start(cefApp));
@@ -72,8 +73,7 @@ public class Main {
             window.setLocationRelativeTo(null);
             window.setExtendedState(Main.settings.launchMaximized ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
             window.setVisible(true);
-        } catch (IOException | UnsupportedPlatformException | InterruptedException
-				 | CefInitializationException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

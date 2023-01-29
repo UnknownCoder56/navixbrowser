@@ -25,7 +25,7 @@ public class DownloadsPanel extends JPanel {
 		panel.add(title);
 		JScrollPane scrollPane = new JScrollPane(panel);
 		if (!Main.downloadPanels.isEmpty()) {
-		Main.downloadPanels.forEach(downloadPanel -> panel.add(downloadPanel));
+		Main.downloadPanels.forEach(panel::add);
 		} else {
 			title.setBorder(new EmptyBorder(5, 5, 0, 0));
 			title.setText("No downloads yet!");

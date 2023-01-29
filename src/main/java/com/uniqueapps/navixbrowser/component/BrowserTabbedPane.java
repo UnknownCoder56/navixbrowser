@@ -37,17 +37,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 
+import com.uniqueapps.navixbrowser.handler.*;
 import org.cef.CefApp;
+import org.cef.CefClient;
 import org.cef.browser.CefBrowser;
 
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.Main.Theme;
-import com.uniqueapps.navixbrowser.handler.NavixContextMenuHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDownloadHandler;
-import com.uniqueapps.navixbrowser.handler.NavixFocusHandler;
-import com.uniqueapps.navixbrowser.handler.NavixLoadHandler;
 
 public class BrowserTabbedPane extends JTabbedPane {
 
@@ -75,8 +71,8 @@ public class BrowserTabbedPane extends JTabbedPane {
         }
     }
 
-    public BrowserTabbedPane(BrowserWindow windowFrame, JButton homeButton, JButton forwardNav, JButton backwardNav,
-                             JButton reloadButton, JTextField browserField) throws IOException {
+    public BrowserTabbedPane(BrowserWindow windowFrame, JButton homeButton, JButton forwardNav,
+                             JButton backwardNav, JButton reloadButton, JTextField browserField) {
         super();
         this.windowFrame = windowFrame;
         this.homeButton = homeButton;
@@ -179,7 +175,7 @@ public class BrowserTabbedPane extends JTabbedPane {
             }
         });
         addChangeListener(l -> {
-            windowFrame.setTitle("Navix");
+            windowFrame.setTitle(getTitleAt(getSelectedIndex()) + " - Navix");
             for (int i = 0; i < getTabCount(); i++) {
                 Component c = getTabComponentAt(i);
                 if (c != null) {
@@ -242,14 +238,7 @@ public class BrowserTabbedPane extends JTabbedPane {
 
     public void addBrowserTab(CefApp cefApp, String startURL, boolean useOSR, boolean isTransparent) {
         var cefClient = cefApp.createClient();
-
-        cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, windowFrame));
-        cefClient.addDialogHandler(new NavixDialogHandler(windowFrame));
-        cefClient.addDisplayHandler(new NavixDisplayHandler(windowFrame, this, browserField, cefApp));
-        cefClient.addDownloadHandler(new NavixDownloadHandler(windowFrame));
-        cefClient.addFocusHandler(new NavixFocusHandler(windowFrame));
-        cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, windowFrame));
-
+        addCefHandlers(cefApp, cefClient);
         var cefBrowser = cefClient.createBrowser(startURL, useOSR, isTransparent);
         browserComponentMap.put(cefBrowser.getUIComponent(), cefBrowser);
         addTab("New Tab", null, cefBrowser.getUIComponent(), cefBrowser.getURL());
@@ -260,6 +249,7 @@ public class BrowserTabbedPane extends JTabbedPane {
     public void addSettingsTab(CefApp cefApp) {
         var settingsDialog = new SettingsPanel(windowFrame);
         addTab("Settings", null, settingsDialog, "Navix settings");
+        setTitleAt(getTabCount() - 1, "Settings");
         setTabComponentAt(getTabCount() - 1, generateSettingsTabPanel(windowFrame, this, cefApp, settingsDialog, true));
         setSelectedIndex(getTabCount() - 1);
     }
@@ -267,6 +257,7 @@ public class BrowserTabbedPane extends JTabbedPane {
     public void addDownloadsTab(CefApp cefApp) {
         var downloadsDialog = new DownloadsPanel();
         addTab("Downloads", null, downloadsDialog, "Navix downloads");
+        setTitleAt(getTabCount() - 1, "Downloads");
         setTabComponentAt(getTabCount() - 1, generateDownloadsTabPanel(windowFrame, this, cefApp, downloadsDialog, true));
         setSelectedIndex(getTabCount() - 1);
     }
@@ -475,5 +466,15 @@ public class BrowserTabbedPane extends JTabbedPane {
 
     private static Color getInactiveTabColor() {
         return Main.settings.theme == Theme.Dark ? inactiveTabColorDarkMode : inactiveTabColorLightMode;
+    }
+
+    private void addCefHandlers(CefApp cefApp, CefClient cefClient) {
+        cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, windowFrame));
+        cefClient.addDialogHandler(new NavixDialogHandler(windowFrame));
+        cefClient.addDisplayHandler(new NavixDisplayHandler(windowFrame, BrowserTabbedPane.this, browserField, cefApp));
+        cefClient.addDownloadHandler(new NavixDownloadHandler(windowFrame));
+        cefClient.addFocusHandler(new NavixFocusHandler(windowFrame));
+        cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, windowFrame));
+        cefClient.addDragHandler(new NavixDragHandler());
     }
 }

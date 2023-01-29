@@ -1,19 +1,18 @@
 package com.uniqueapps.navixbrowser.component;
 
 import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.handler.*;
 import com.uniqueapps.navixbrowser.listener.NavixComponentListener;
 import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
-import me.friwi.jcefmaven.CefInitializationException;
-import me.friwi.jcefmaven.UnsupportedPlatformException;
 import org.cef.CefApp;
-import org.cef.CefClient;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ContainerAdapter;
+import java.awt.event.ContainerEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
@@ -30,7 +29,6 @@ public class BrowserWindow extends JFrame {
 	static GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
 
 	public final CefApp cefApp;
-	private final CefClient cefClient;
 	private final JTextField browserAddressField;
 	private final JButton homeButton;
 	private final JButton forwardNav;
@@ -49,8 +47,7 @@ public class BrowserWindow extends JFrame {
 	JPanel bookmarksPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
 
 	@SuppressWarnings("unchecked")
-	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX)
-			throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
+	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX) throws IOException {
 
 		File resources = new File(".", "resources");
 		if (resources.mkdirs()) {
@@ -67,7 +64,6 @@ public class BrowserWindow extends JFrame {
 		}
 
 		cefApp = cefAppX;
-		cefClient = cefApp.createClient();
 
 		bookmarkFile.createNewFile();
 
@@ -108,30 +104,16 @@ public class BrowserWindow extends JFrame {
 			}
 		};
 
-		try {
-			tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav, reloadButton,
-					browserAddressField);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav,
+				reloadButton, browserAddressField);
 
 		Main.downloadWindow.setVisible(false);
 
-		addCefHandlers();
 		addListeners();
 		prepareNavBar(startURL, useOSR, isTransparent);
 
 		tabbedPane.setBorder(new EmptyBorder(0, 0, 0, 0));
 		tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent);
-	}
-
-	private void addCefHandlers() {
-		cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, this));
-		cefClient.addDialogHandler(new NavixDialogHandler(this));
-		cefClient.addDisplayHandler(new NavixDisplayHandler(this, tabbedPane, browserAddressField, cefApp));
-		cefClient.addDownloadHandler(new NavixDownloadHandler(this));
-		cefClient.addFocusHandler(new NavixFocusHandler(this));
-		cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, this));
 	}
 
 	private void addListeners() {
