@@ -2,6 +2,7 @@ package com.uniqueapps.navixbrowser.handler;
 
 import java.io.File;
 
+import com.uniqueapps.navixbrowser.component.DownloadsPanel;
 import org.cef.browser.CefBrowser;
 import org.cef.callback.CefBeforeDownloadCallback;
 import org.cef.callback.CefDownloadItem;
@@ -31,6 +32,13 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 				cefDownloadItem.getStartTime(), DownloadState.DOWNLOADING);
 		Main.downloads.add(downloadObject);
 		Main.downloadPanels.add(new DownloadObjectPanel(browserWindow, downloadObject));
+		if (browserWindow.tabbedPane.downloadsTabOpen) {
+			(
+					(DownloadsPanel) browserWindow.tabbedPane.getComponentAt(
+							browserWindow.tabbedPane.indexOfTab("Downloads")
+					)
+			).refreshDownloadPanels();
+		}
 		Main.refreshDownloads();
 		cefBeforeDownloadCallback.Continue(
 				new File(new File(System.getProperty("user.home", "Downloads")), suggestedFileName).getAbsolutePath(),

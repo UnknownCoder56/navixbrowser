@@ -53,37 +53,15 @@ public class NavixLoadHandler extends CefLoadHandlerAdapter {
         if (browserWindow.tabbedPane.getSelectedBrowser() == cefBrowser) {
             browserWindow.loadBar.setVisible(false);
             if (errorCode.getCode() != -3) {
-                new Thread(() -> {
-                    try {
-                        LookAndFeel currentLookAndFeel = UIManager.getLookAndFeel();
-                        SwingUtilities.invokeAndWait(() -> {
-                            try {
-                                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
-                                     UnsupportedLookAndFeelException e) {
-                                System.out.println(e.getMessage());
-                            }
-                        });
-                        JOptionPane.showOptionDialog(
-                                browserWindow,
-                                "Failed to load \"" + s1 + "\" with error \"" + s + "\"!",
-                                "Failed to load page!",
-                                JOptionPane.DEFAULT_OPTION,
-                                JOptionPane.ERROR_MESSAGE,
-                                null,
-                                null,
-                                null);
-                        SwingUtilities.invokeAndWait(() -> {
-                            try {
-                                UIManager.setLookAndFeel(currentLookAndFeel);
-                            } catch (UnsupportedLookAndFeelException e) {
-                                System.out.println(e.getMessage());
-                            }
-                        });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }).start();
+                SwingUtilities.invokeLater(() -> JOptionPane.showOptionDialog(
+                        browserWindow,
+                        "Failed to load \"" + s1 + "\" with error \"" + s + "\"!",
+                        "Failed to load page!",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.ERROR_MESSAGE,
+                        null,
+                        null,
+                        null));
             }
         }
     }

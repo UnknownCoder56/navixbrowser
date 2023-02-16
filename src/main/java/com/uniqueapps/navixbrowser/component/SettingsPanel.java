@@ -1,13 +1,14 @@
 package com.uniqueapps.navixbrowser.component;
 
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.Main.Theme;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -33,8 +34,9 @@ public class SettingsPanel extends JPanel {
 		JPanel panel = new JPanel(new GridBagLayout());
 		parent.add(panel, BorderLayout.NORTH);
 
+		// Title
 		JLabel title = new JLabel("Settings");
-		title.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		title.setFont(title.getFont().deriveFont(20F));
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(0, 10, 5, 5);
 		gbc.ipady = 12;
@@ -43,8 +45,9 @@ public class SettingsPanel extends JPanel {
 		gbc.gridy = 0;
 		panel.add(title, gbc);
 
+
+		// HAL
 		JLabel hal = new JLabel("Hardware acceleration");
-		hal.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GridBagConstraints gbc1 = new GridBagConstraints();
 		gbc1.anchor = GridBagConstraints.WEST;
 		gbc1.insets = new Insets(0, 15, 5, 5);
@@ -67,8 +70,9 @@ public class SettingsPanel extends JPanel {
 		gbc2.gridy = 1;
 		panel.add(halEnabled, gbc2);
 
+
+		// OSR
 		JLabel osr = new JLabel("Off-screen rendering");
-		osr.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GridBagConstraints gbc3 = new GridBagConstraints();
 		gbc3.anchor = GridBagConstraints.WEST;
 		gbc3.insets = new Insets(0, 15, 5, 5);
@@ -91,8 +95,9 @@ public class SettingsPanel extends JPanel {
 		gbc4.gridy = 2;
 		panel.add(osrEnabled, gbc4);
 
+
+		// Search engine
 		JLabel searchEngine = new JLabel("Preferred search engine");
-		searchEngine.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GridBagConstraints gbc5 = new GridBagConstraints();
 		gbc5.ipadx = 18;
 		gbc5.anchor = GridBagConstraints.WEST;
@@ -119,16 +124,18 @@ public class SettingsPanel extends JPanel {
 			}
 		});
 		GridBagConstraints gbc6 = new GridBagConstraints();
-		gbc6.insets = new Insets(5, 5, 5, 0);
+		gbc6.insets = new Insets(5, 5, 5, 5);
 		gbc6.anchor = GridBagConstraints.NORTH;
 		gbc6.fill = GridBagConstraints.HORIZONTAL;
 		gbc6.weightx = 10.0;
+		gbc6.gridwidth = GridBagConstraints.REMAINDER;
 		gbc6.gridx = 1;
 		gbc6.gridy = 3;
 		panel.add(searchEngineList, gbc6);
 
+
+		// Theme
 		JLabel theme = new JLabel("Theme");
-		theme.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GridBagConstraints gbc7 = new GridBagConstraints();
 		gbc7.anchor = GridBagConstraints.WEST;
 		gbc7.insets = new Insets(0, 15, 5, 5);
@@ -136,6 +143,7 @@ public class SettingsPanel extends JPanel {
 		gbc7.gridy = 4;
 		panel.add(theme, gbc7);
 
+		JButton themeColor = new JButton("Select background color for modern theme");
 		JComboBox<Theme> themeList = new JComboBox<>();
 		themeList.setModel(new DefaultComboBoxModel<>(Theme.values()));
 		themeList.setSelectedItem(Main.settings.theme);
@@ -145,14 +153,19 @@ public class SettingsPanel extends JPanel {
 				if (selectedTheme != Main.settings.theme) {
 					Main.settings.theme = selectedTheme;
 					Main.refreshSettings();
+					themeColor.setEnabled(Main.settings.theme == Theme.Modern);
 					try {
-						if (Main.settings.theme == Theme.Dark) {
-							UIManager.setLookAndFeel(new FlatDarkLaf());
-						} else {
-							UIManager.setLookAndFeel(new FlatLightLaf());
+						switch (Main.settings.theme) {
+							case Modern:
+								UIManager.setLookAndFeel(Main.getModernLookAndFeelForBackground());
+								break;
+							case System:
+								UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+								break;
 						}
-					} catch (UnsupportedLookAndFeelException e1) {
-						e1.printStackTrace();
+					} catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
+							 IllegalAccessException e1) {
+						throw new RuntimeException(e1);
 					}
 					SwingUtilities.updateComponentTreeUI(browserWindow);
 					browserWindow.tabbedPane.applyThemeChange();
@@ -168,8 +181,43 @@ public class SettingsPanel extends JPanel {
 		gbc8.gridy = 4;
 		panel.add(themeList, gbc8);
 
+		themeColor.setEnabled(Main.settings.theme == Theme.Modern);
+		themeColor.addActionListener(l -> SwingUtilities.invokeLater(() -> {
+			Color color = JColorChooser.showDialog(this, "Select background color", (Color) UIManager.get("control"));
+			if (color != null) {
+				String hex = "#" + Integer.toHexString(color.getRGB()).substring(2);
+				try (BufferedWriter writer = new BufferedWriter(new FileWriter("./themes/FlatLaf.properties", false))) {
+					writer.write("@bg = " + hex + "\n\n" +
+							"*.foreground = " + (Main.getTextColorForBackground(color) == Color.WHITE ? "#FFF" : "#000") + "\n" +
+							"*.background = @bg\n" +
+							"@background = @bg\n" +
+							"desktop = @bg\n" +
+							"window = @bg\n" +
+							"menu = @bg\n" +
+							"text = @bg\n" +
+							"control = @bg");
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				try {
+					UIManager.setLookAndFeel(Main.getModernLookAndFeelForBackground(color));
+				} catch (UnsupportedLookAndFeelException e) {
+					throw new RuntimeException(e);
+				}
+				SwingUtilities.updateComponentTreeUI(browserWindow);
+				browserWindow.tabbedPane.applyThemeChange();
+			}
+		}));
+		GridBagConstraints gbc8x = new GridBagConstraints();
+		gbc8x.insets = new Insets(0, 5, 0, 5);
+		gbc8x.anchor = GridBagConstraints.EAST;
+		gbc8x.gridx = 2;
+		gbc8x.gridy = 4;
+		panel.add(themeColor, gbc8x);
+
+
+		// Launch maximized
 		JLabel launchMaximized = new JLabel("Launch maximized");
-		launchMaximized.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GridBagConstraints gbc9 = new GridBagConstraints();
 		gbc9.anchor = GridBagConstraints.WEST;
 		gbc9.insets = new Insets(0, 15, 5, 5);
@@ -191,6 +239,81 @@ public class SettingsPanel extends JPanel {
 		gbc10.gridx = 1;
 		gbc10.gridy = 5;
 		panel.add(launchMaximizedEnabled, gbc10);
+
+
+		// Ad block
+		JLabel adBlock = new JLabel("Enable ad block");
+		GridBagConstraints gbc11 = new GridBagConstraints();
+		gbc11.anchor = GridBagConstraints.WEST;
+		gbc11.insets = new Insets(0, 15, 5, 5);
+		gbc11.gridx = 0;
+		gbc11.gridy = 6;
+		panel.add(adBlock, gbc11);
+
+		JCheckBox adBlockEnabled = new JCheckBox();
+		adBlockEnabled.setSelected(Main.settings.enableAdBlock);
+		adBlockEnabled.addChangeListener(l -> {
+			if (adBlockEnabled.isSelected() != Main.settings.enableAdBlock) {
+				Main.settings.enableAdBlock = adBlockEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
+		GridBagConstraints gbc12 = new GridBagConstraints();
+		gbc12.insets = new Insets(5, 1, 5, 0);
+		gbc12.anchor = GridBagConstraints.NORTHWEST;
+		gbc12.gridx = 1;
+		gbc12.gridy = 6;
+		panel.add(adBlockEnabled, gbc12);
+
+
+		// Tracker block
+		JLabel trackerBlock = new JLabel("Enable tracker block");
+		GridBagConstraints gbc13 = new GridBagConstraints();
+		gbc13.anchor = GridBagConstraints.WEST;
+		gbc13.insets = new Insets(0, 15, 5, 5);
+		gbc13.gridx = 0;
+		gbc13.gridy = 7;
+		panel.add(trackerBlock, gbc13);
+
+		JCheckBox trackerBlockEnabled = new JCheckBox();
+		trackerBlockEnabled.setSelected(Main.settings.enableTrackerBlock);
+		trackerBlockEnabled.addChangeListener(l -> {
+			if (trackerBlockEnabled.isSelected() != Main.settings.enableTrackerBlock) {
+				Main.settings.enableTrackerBlock = trackerBlockEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
+		GridBagConstraints gbc14 = new GridBagConstraints();
+		gbc14.insets = new Insets(5, 1, 5, 0);
+		gbc14.anchor = GridBagConstraints.NORTHWEST;
+		gbc14.gridx = 1;
+		gbc14.gridy = 7;
+		panel.add(trackerBlockEnabled, gbc14);
+
+
+		// Safe browsing
+		JLabel safeBrowsing = new JLabel("Enable safe browsing");
+		GridBagConstraints gbc15 = new GridBagConstraints();
+		gbc15.anchor = GridBagConstraints.WEST;
+		gbc15.insets = new Insets(0, 15, 5, 5);
+		gbc15.gridx = 0;
+		gbc15.gridy = 8;
+		panel.add(safeBrowsing, gbc15);
+
+		JCheckBox safeBrowsingEnabled = new JCheckBox();
+		safeBrowsingEnabled.setSelected(Main.settings.enableSafeBrowsing);
+		safeBrowsingEnabled.addChangeListener(l -> {
+			if (safeBrowsingEnabled.isSelected() != Main.settings.enableSafeBrowsing) {
+				Main.settings.enableSafeBrowsing = safeBrowsingEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
+		GridBagConstraints gbc16 = new GridBagConstraints();
+		gbc16.insets = new Insets(5, 1, 5, 0);
+		gbc16.anchor = GridBagConstraints.NORTHWEST;
+		gbc16.gridx = 1;
+		gbc16.gridy = 8;
+		panel.add(safeBrowsingEnabled, gbc16);
 
 		JLabel bottomInfo = new JLabel("Version " + Main.VERSION + " (Chromium "
 				+ browserWindow.cefApp.getVersion().getChromeVersion() + ")."

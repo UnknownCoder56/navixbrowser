@@ -1,13 +1,12 @@
 package com.uniqueapps.navixbrowser.handler;
 
+import com.uniqueapps.navixbrowser.Main;
 import org.cef.browser.CefBrowser;
 import org.cef.callback.CefCallback;
 import org.cef.handler.CefResourceHandlerAdapter;
 import org.cef.network.CefRequest;
 
-import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.Main.Theme;
-
+import java.awt.*;
 import java.io.File;
 
 public class NavixSchemeHandler extends CefResourceHandlerAdapter {
@@ -24,7 +23,7 @@ public class NavixSchemeHandler extends CefResourceHandlerAdapter {
 		String action = cefRequest.getURL();
 		if (action.contains("home")) {
 			File resources = new File(".", "resources");
-			if (Main.settings.theme == Theme.Dark) {
+			if (Main.getTextColorForBackground() == Color.WHITE) {
 				browser.loadURL("file://" + resources.getAbsolutePath() + "/newtab-dark.html");
 			} else {
 				browser.loadURL("file://" + resources.getAbsolutePath() + "/newtab-light.html");

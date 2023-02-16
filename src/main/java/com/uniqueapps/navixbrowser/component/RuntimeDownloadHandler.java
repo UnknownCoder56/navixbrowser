@@ -22,7 +22,7 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
 	JLabel label = new JLabel("Preparing runtime...");
 	
 	public RuntimeDownloadHandler() {
-        super();
+		super();
         label.setFont(label.getFont().deriveFont(20.0F));
         label.setHorizontalAlignment(JLabel.CENTER);
         label.setBorder(new EmptyBorder(5, 5, 5, 5));

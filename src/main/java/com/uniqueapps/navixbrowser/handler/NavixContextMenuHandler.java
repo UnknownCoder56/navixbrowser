@@ -1,20 +1,8 @@
 package com.uniqueapps.navixbrowser.handler;
 
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Vector;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-import com.formdev.flatlaf.FlatLightLaf;
+import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.component.BrowserWindow;
+import com.uniqueapps.navixbrowser.object.TransferableImage;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
@@ -24,10 +12,19 @@ import org.cef.callback.CefContextMenuParams.MediaType;
 import org.cef.callback.CefMenuModel;
 import org.cef.handler.CefContextMenuHandlerAdapter;
 
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.component.BrowserWindow;
-import com.uniqueapps.navixbrowser.object.TransferableImage;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 
@@ -257,12 +254,11 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                         browser.setZoomLevel(0);
                         break;
                     case SCREENSHOT:
-                        new Thread(() -> {
+                        SwingUtilities.invokeLater(() -> {
                             try {
                                 BufferedImage screenshot = Main.settings.OSR ?
                                         browser.createScreenshot(true).get() :
                                         getComponentScreenshot(browser.getUIComponent());
-                                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                                 JFileChooser chooser = new JFileChooser();
                                 chooser.setSelectedFile(new File("Navix_Screenshot_" + LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE) + (Main.settings.OSR ? ".jpg" : ".bmp")));
                                 chooser.setFileFilter(new FileNameExtensionFilter(Main.settings.OSR ? "JPEG image" : "Bitmap image", Main.settings.OSR ? ".jpg" : ".bmp"));
@@ -284,11 +280,10 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                                                 chooser.getSelectedFile());
                                     }
                                 }
-                                UIManager.setLookAndFeel(Main.settings.theme == Main.Theme.Dark ? new FlatDarkLaf() : new FlatLightLaf());
-                            } catch (Exception e) {
+                            } catch (IOException | ExecutionException | InterruptedException e) {
                                 e.printStackTrace();
                             }
-                        }).start();
+                        });
                         break;
                     case VIEW_PAGE_SOURCE:
                         browserWindow.tabbedPane.addBrowserTab(cefApp, "view-source:" + frame.getURL(), Main.settings.OSR,
@@ -322,9 +317,8 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                             null);
                     break;
                 case SAVE_AS:
-                    new Thread(() -> {
+                    SwingUtilities.invokeLater(() -> {
                         try {
-                            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                             JFileChooser chooser = new JFileChooser();
                             chooser.setSelectedFile(new File("Navix_Image_" + LocalDateTime.now() + ".jpg"));
                             chooser.setFileFilter(new FileNameExtensionFilter("JPG image", ".jpg"));
@@ -333,12 +327,10 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                                 ImageIO.write(ImageIO.read(new URL(params.getSourceUrl())), "jpg",
                                         chooser.getSelectedFile());
                             }
-                            UIManager.setLookAndFeel(new FlatDarkLaf());
-                        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
-                                 | UnsupportedLookAndFeelException e) {
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }).start();
+                    });
                     break;
                 case INSPECT:
                     browserWindow.splitPane.setRightComponent(

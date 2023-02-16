@@ -1,7 +1,11 @@
 package com.uniqueapps.navixbrowser;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.safebrowsing.v4.Safebrowsing;
 import com.uniqueapps.navixbrowser.component.BrowserWindow;
 import com.uniqueapps.navixbrowser.component.DownloadObjectPanel;
 import com.uniqueapps.navixbrowser.component.RuntimeDownloadHandler;
@@ -18,6 +22,8 @@ import org.cef.CefApp;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,29 +44,48 @@ public class Main {
     public static List<DownloadObjectPanel> downloadPanels = new ArrayList<>();
     public static Map<DownloadObject, DownloadAction> downloadsActionBuffer = new HashMap<>();
 
+    public static File themes = new File(".", "themes");
+
     public static RuntimeDownloadHandler downloadWindow;
 
+    public static Safebrowsing safebrowsing;
+
     public enum Theme {
-        Dark, Light
+        Modern, System
     }
 
     public static void main(String[] args) {
+        try {
+            safebrowsing = new Safebrowsing.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    null)
+                    .setApplicationName("Navix")
+                    .build();
+        } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException(e);
+        }
         userAppData.mkdir();
         cache.mkdir();
         loadSettings();
+        prepareThemes();
         try {
-            if (Main.settings.theme == Theme.Dark) {
-                UIManager.setLookAndFeel(new FlatDarkLaf());
-            } else {
-                UIManager.setLookAndFeel(new FlatLightLaf());
+            switch (Main.settings.theme) {
+                case Modern:
+                    UIManager.setLookAndFeel(getModernLookAndFeelForBackground());
+                    break;
+                case System:
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    break;
             }
-        } catch (UnsupportedLookAndFeelException e) {
+        } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
+                 IllegalAccessException e) {
             throw new RuntimeException(e);
         }
 
         downloadWindow = new RuntimeDownloadHandler();
 		CefApp cefApp = createCefApp();
-		SwingUtilities.invokeLater(()-> start(cefApp));
+		SwingUtilities.invokeLater(() -> start(cefApp));
     }
 
     public static void start(CefApp cefApp) {
@@ -151,6 +176,67 @@ public class Main {
         try {
             return builder.build();
         } catch (IOException | InterruptedException | UnsupportedPlatformException | CefInitializationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void prepareThemes() {
+        if (themes.mkdir()) {
+            try {
+                Files.copy(Main.class.getResourceAsStream("/themes/FlatLaf.properties"),
+                        new File(themes, "FlatLaf.properties").toPath());
+                Files.copy(Main.class.getResourceAsStream("/themes/FlatLightLaf.properties"),
+                        new File(themes, "FlatLightLaf.properties").toPath());
+                Files.copy(Main.class.getResourceAsStream("/themes/FlatDarkLaf.properties"),
+                        new File(themes, "FlatDarkLaf.properties").toPath());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        FlatLaf.registerCustomDefaultsSource(themes);
+    }
+
+    public static LookAndFeel getModernLookAndFeelForBackground() {
+        Color bgColor = getBgColor();
+
+        // Calculate the perceptive luminance (aka luma) - human eye favors green color...
+        double luma = ((0.299 * bgColor.getRed()) + (0.587 * bgColor.getGreen()) + (0.114 * bgColor.getBlue())) / 255;
+
+        // Return light theme for bright colors, dark theme for dark colors
+        return luma > 0.5 ? new FlatLightLaf() : new FlatDarkLaf();
+    }
+
+    public static LookAndFeel getModernLookAndFeelForBackground(Color bgColor) {
+        // Calculate the perceptive luminance (aka luma) - human eye favors green color...
+        double luma = ((0.299 * bgColor.getRed()) + (0.587 * bgColor.getGreen()) + (0.114 * bgColor.getBlue())) / 255;
+
+        // Return light theme for bright colors, dark theme for dark colors
+        return luma > 0.5 ? new FlatLightLaf() : new FlatDarkLaf();
+    }
+
+    public static Color getTextColorForBackground() {
+        Color bgColor = getBgColor();
+
+        // Calculate the perceptive luminance (aka luma) - human eye favors green color...
+        double luma = ((0.299 * bgColor.getRed()) + (0.587 * bgColor.getGreen()) + (0.114 * bgColor.getBlue())) / 255;
+
+        // Return black for bright colors, white for dark colors
+        return luma > 0.5 ? Color.BLACK : Color.WHITE;
+    }
+
+    public static Color getTextColorForBackground(Color bgColor) {
+        // Calculate the perceptive luminance (aka luma) - human eye favors green color...
+        double luma = ((0.299 * bgColor.getRed()) + (0.587 * bgColor.getGreen()) + (0.114 * bgColor.getBlue())) / 255;
+
+        // Return black for bright colors, white for dark colors
+        return luma > 0.5 ? Color.BLACK : Color.WHITE;
+    }
+
+    private static Color getBgColor() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("./themes/FlatLaf.properties"))) {
+            String hexColor = reader.readLine().substring(6);
+            return Color.decode(hexColor);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

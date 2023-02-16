@@ -11,5 +11,8 @@ public class UserSettings implements Serializable {
 	public boolean OSR = false;
 	public boolean launchMaximized = true;
 	public String searchEngine = "https://google.com/search?q=";
-	public Theme theme = Theme.Dark;
+	public Theme theme = Theme.Modern;
+	public boolean enableAdBlock = true;
+	public boolean enableTrackerBlock = true;
+	public boolean enableSafeBrowsing = true;
 }

@@ -1,8 +1,8 @@
 package com.uniqueapps.navixbrowser.component;
 
 import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.listener.NavixComponentListener;
 import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
+import com.uniqueapps.navixbrowser.listener.SimpleDocumentListener;
 import org.cef.CefApp;
 
 import javax.imageio.ImageIO;
@@ -30,6 +30,7 @@ public class BrowserWindow extends JFrame {
 
 	public final CefApp cefApp;
 	private final JTextField browserAddressField;
+	private final JTextField browserSearchField;
 	private final JButton homeButton;
 	private final JButton forwardNav;
 	private final JButton backwardNav;
@@ -40,6 +41,8 @@ public class BrowserWindow extends JFrame {
 	public final JProgressBar loadBar;
 	public final BrowserTabbedPane tabbedPane;
 	public final JSplitPane splitPane;
+	public JToolBar toolBar;
+	public JToolBar toolBar2;
 	public boolean browserIsInFocus = false;
 
 	File bookmarkFile = new File(Main.userAppData, "bookmarks");
@@ -50,17 +53,17 @@ public class BrowserWindow extends JFrame {
 	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX) throws IOException {
 
 		File resources = new File(".", "resources");
-		if (resources.mkdirs()) {
+		if (resources.mkdir()) {
 			Files.copy(getClass().getResourceAsStream("/resources/navix.ico"),
-					new File(new File(".", "resources"), "navix.ico").toPath());
+					new File(resources, "navix.ico").toPath());
 			Files.copy(getClass().getResourceAsStream("/resources/newtab-dark.html"),
-					new File(new File(".", "resources"), "newtab-dark.html").toPath());
+					new File(resources, "newtab-dark.html").toPath());
 			Files.copy(getClass().getResourceAsStream("/resources/style-dark.css"),
-					new File(new File(".", "resources"), "style-dark.css").toPath());
+					new File(resources, "style-dark.css").toPath());
 			Files.copy(getClass().getResourceAsStream("/resources/newtab-light.html"),
-					new File(new File(".", "resources"), "newtab-light.html").toPath());
+					new File(resources, "newtab-light.html").toPath());
 			Files.copy(getClass().getResourceAsStream("/resources/style-light.css"),
-					new File(new File(".", "resources"), "style-light.css").toPath());
+					new File(resources, "style-light.css").toPath());
 		}
 
 		cefApp = cefAppX;
@@ -103,9 +106,10 @@ public class BrowserWindow extends JFrame {
 				super.paintComponent(g2d);
 			}
 		};
+		browserSearchField = new HintTextField("Search in page", 100);
 
 		tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav,
-				reloadButton, browserAddressField);
+				reloadButton, addBookmarkButton, browserAddressField, browserSearchField);
 
 		Main.downloadWindow.setVisible(false);
 
@@ -117,8 +121,6 @@ public class BrowserWindow extends JFrame {
 	}
 
 	private void addListeners() {
-		// A hack to enable browser resizing in non-OSR mode in Linux.
-		addComponentListener(new NavixComponentListener(this, tabbedPane));
 		addWindowListener(new NavixWindowListener(this, cefApp));
 	}
 
@@ -139,6 +141,7 @@ public class BrowserWindow extends JFrame {
 		browserAddressField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
+				browserAddressField.selectAll();
 				if (!browserIsInFocus)
 					return;
 				browserIsInFocus = false;
@@ -147,9 +150,37 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
+		browserSearchField.getDocument().addDocumentListener((SimpleDocumentListener) e -> {
+			if (!browserSearchField.getText().isEmpty()) {
+				tabbedPane.getSelectedBrowser().find(
+						browserSearchField.getText(),
+						true,
+						false,
+						false);
+			} else {
+				if (tabbedPane.getSelectedBrowser() != null) {
+					tabbedPane.getSelectedBrowser().stopFinding(true);
+				}
+			}
+		});
+		browserSearchField.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				if (!browserIsInFocus)
+					return;
+				browserIsInFocus = false;
+				KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
+				browserSearchField.requestFocusInWindow();
+			}
+		});
+
 		browserAddressField.setBorder(new RoundedBorder(Color.LIGHT_GRAY.darker(), 1, 28, 5));
-		browserAddressField.setBackground(new Color(0x0, true));
+		browserAddressField.setOpaque(false);
 		browserAddressField.setFont(new JLabel().getFont());
+
+		browserSearchField.setBorder(new RoundedBorder(Color.LIGHT_GRAY.darker(), 1, 28, 5));
+		browserSearchField.setOpaque(false);
+		browserSearchField.setFont(new JLabel().getFont());
 
 		backwardNav.setEnabled(false);
 		forwardNav.setEnabled(false);
@@ -275,16 +306,6 @@ public class BrowserWindow extends JFrame {
 			popup.show(this, this.getWidth(), 0);
 		});
 
-		JPanel separatorPanel = new JPanel() {
-			private static final long serialVersionUID = -1266847953751569210L;
-
-			@Override
-			protected void paintComponent(Graphics g) {
-				g.setColor(Color.DARK_GRAY.brighter());
-				g.drawLine(getWidth() / 2, 3, getWidth() / 2, getHeight() - 3);
-			}
-		};
-
 		JPanel navBar = new JPanel(new GridBagLayout());
 
 		for (var bookmark : bookmarks.entrySet()) {
@@ -330,27 +351,39 @@ public class BrowserWindow extends JFrame {
 		gbcX.weightx = 10;
 		bottomPanel.add(bookmarksPanel, gbcX);
 
-		JToolBar toolBar = new JToolBar();
-		toolBar.setMargin(new Insets(3, 2, 3, 2));
+		toolBar = new JToolBar();
+		toolBar.setFloatable(false);
+		toolBar.setMargin(new Insets(3, 0, 3, 0));
 		toolBar.add(addTabButton);
-		toolBar.add(separatorPanel);
+		toolBar.addSeparator();
 		toolBar.add(backwardNav);
 		toolBar.add(forwardNav);
 		toolBar.add(reloadButton);
 		toolBar.add(homeButton);
 
-		JToolBar toolBar2 = new JToolBar();
-		toolBar.setMargin(new Insets(3, 3, 3, 3));
+		toolBar2 = new JToolBar();
+		toolBar2.setFloatable(false);
+		toolBar2.setMargin(new Insets(3, 0, 3, 0));
 		toolBar2.add(addBookmarkButton);
 		toolBar2.add(contextMenuButton);
 
+		JPanel textFields = new JPanel(new GridBagLayout());
+		GridBagConstraints gbcT = new GridBagConstraints();
+		gbcT.fill = GridBagConstraints.HORIZONTAL;
+		gbcT.insets = new Insets(0, 0, 0, 3);
+		gbcT.weightx = 80;
+		textFields.add(browserAddressField, gbcT);
+		gbcT.insets = new Insets(0, 3, 0, 0);
+		gbcT.weightx = 20;
+		textFields.add(browserSearchField, gbcT);
+
 		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.weightx = 1;
+		gbc.weightx = 0.1;
 		navBar.add(toolBar, gbc);
-		gbc.weightx = 100;
+		gbc.weightx = 1000;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
-		navBar.add(browserAddressField, gbc);
-		gbc.weightx = 1;
+		navBar.add(textFields, gbc);
+		gbc.weightx = 0.1;
 		gbc.fill = GridBagConstraints.NONE;
 		navBar.add(toolBar2, gbc);
 
