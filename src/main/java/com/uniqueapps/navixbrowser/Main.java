@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class Main {
 
-    public static String VERSION = "1.8";
+    public static String VERSION = "2.0";
     public static int DEBUG_PORT = 8090;
 
     public static File userAppData = new File(".", "AppData");
