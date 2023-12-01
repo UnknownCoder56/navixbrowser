@@ -23,11 +23,7 @@ public class NavixSchemeHandler extends CefResourceHandlerAdapter {
 		String action = cefRequest.getURL();
 		if (action.contains("home")) {
 			File resources = new File(".", "resources");
-			if (Main.getTextColorForBackground() == Color.WHITE) {
-				browser.loadURL("file://" + resources.getAbsolutePath() + "/newtab-dark.html");
-			} else {
-				browser.loadURL("file://" + resources.getAbsolutePath() + "/newtab-light.html");
-			}
+			browser.loadURL("file://" + resources.getAbsolutePath() + (Main.getTextColorForBackground() == Color.WHITE ? "/newtab-dark.html" : "/newtab-light.html"));
 			cefCallback.Continue();
 		}
 		return false;

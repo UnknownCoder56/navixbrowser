@@ -1,6 +1,8 @@
 package com.uniqueapps.navixbrowser.handler;
 
+import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.component.BrowserWindow;
+import com.uniqueapps.navixbrowser.object.DevToolsClient;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.handler.CefLoadHandlerAdapter;
@@ -20,22 +22,24 @@ public class NavixLoadHandler extends CefLoadHandlerAdapter {
     }
 
     @Override
-    public void onLoadStart(CefBrowser browser, CefFrame frame, TransitionType transitionType) {
-        super.onLoadStart(browser, frame, transitionType);
-        if (browserWindow.tabbedPane.getSelectedBrowser() == browser) {
+    public void onLoadStart(CefBrowser cefBrowser, CefFrame frame, TransitionType transitionType) {
+        super.onLoadStart(cefBrowser, frame, transitionType);
+        if (browserWindow.tabbedPane.getSelectedBrowser() == cefBrowser) {
             browserWindow.loadBar.setIndeterminate(false);
             browserWindow.loadBar.setValue(0);
             browserWindow.loadBar.setIndeterminate(true);
             browserWindow.loadBar.setVisible(true);
         }
+        new Thread(new DarkModeHandler(cefBrowser)).start();
     }
 
     @Override
-    public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
-        super.onLoadEnd(browser, frame, httpStatusCode);
-        if (browserWindow.tabbedPane.getSelectedBrowser() == browser) {
+    public void onLoadEnd(CefBrowser cefBrowser, CefFrame frame, int httpStatusCode) {
+        super.onLoadEnd(cefBrowser, frame, httpStatusCode);
+        if (browserWindow.tabbedPane.getSelectedBrowser() == cefBrowser) {
             browserWindow.loadBar.setVisible(false);
         }
+        new Thread(new DarkModeHandler(cefBrowser)).start();
     }
 
     @Override
@@ -45,6 +49,7 @@ public class NavixLoadHandler extends CefLoadHandlerAdapter {
             forwardNav.setEnabled(cefBrowser.canGoForward());
             backwardNav.setEnabled(cefBrowser.canGoBack());
         }
+        new Thread(new DarkModeHandler(cefBrowser)).start();
     }
 
     @Override
@@ -66,3 +71,11 @@ public class NavixLoadHandler extends CefLoadHandlerAdapter {
         }
     }
 }
+
+class DarkModeHandler extends DevToolsClient {
+
+    public DarkModeHandler(CefBrowser cefBrowser) {
+        super(cefBrowser, "{\"id\":1,\"method\":\"Emulation.setAutoDarkModeOverride\",\"params\":{\"enabled\":" + (Main.settings.forceDarkMode ? "true" : "false") + "}}");
+    }
+}
+

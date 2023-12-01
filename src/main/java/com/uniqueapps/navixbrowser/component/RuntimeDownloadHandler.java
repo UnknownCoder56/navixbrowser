@@ -3,12 +3,12 @@ package com.uniqueapps.navixbrowser.component;
 import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Objects;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
 
 import me.friwi.jcefmaven.EnumProgress;
@@ -16,10 +16,10 @@ import me.friwi.jcefmaven.IProgressHandler;
 
 public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
 	
-	static final long serialVersionUID = -1763136977454349368L;
+	private static final long serialVersionUID = -1763136977454349368L;
 
-	JProgressBar progressBar = new JProgressBar();
-	JLabel label = new JLabel("Preparing runtime...");
+	BetterJProgressBar progressBar = new BetterJProgressBar();
+	BetterJLabel label = new BetterJLabel("Preparing runtime...");
 	
 	public RuntimeDownloadHandler() {
 		super();
@@ -27,7 +27,7 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
         label.setHorizontalAlignment(JLabel.CENTER);
         label.setBorder(new EmptyBorder(5, 5, 5, 5));
         try {
-            label.setIcon(new ImageIcon(ImageIO.read(getClass().getResourceAsStream("/images/navix.png")).getScaledInstance(50, 50, BufferedImage.SCALE_SMOOTH)));
+            label.setIcon(new ImageIcon(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))).getScaledInstance(50, 50, BufferedImage.SCALE_SMOOTH)));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -37,7 +37,7 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
         add(progressBar, BorderLayout.SOUTH);
         setSize(400, 300);
         try {
-			setIconImage(ImageIO.read(getClass().getResourceAsStream("/images/navix.png")));
+			setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

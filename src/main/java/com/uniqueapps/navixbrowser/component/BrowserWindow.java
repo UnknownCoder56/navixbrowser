@@ -1,26 +1,67 @@
 package com.uniqueapps.navixbrowser.component;
 
-import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
-import com.uniqueapps.navixbrowser.listener.SimpleDocumentListener;
-import org.cef.CefApp;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
+import java.awt.RenderingHints;
 import java.awt.event.ContainerAdapter;
 import java.awt.event.ContainerEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
+import javax.swing.JSplitPane;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+
+import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.listener.NavixWindowListener;
+import com.uniqueapps.navixbrowser.listener.SimpleDocumentListener;
 
 public class BrowserWindow extends JFrame {
 
@@ -43,7 +84,13 @@ public class BrowserWindow extends JFrame {
 	public final JSplitPane splitPane;
 	public JToolBar toolBar;
 	public JToolBar toolBar2;
+	public final JPopupMenu suggestionsPopupMenu;
+	private final Timer suggestionTimer;
+	public final BetterJLabel tooltip;
+	public final Timer tooltipTimer;
 	public boolean browserIsInFocus = false;
+
+	public static Map<Component, CefBrowser> devToolsComponentMap = new HashMap<>();
 
 	File bookmarkFile = new File(Main.userAppData, "bookmarks");
 	private final Map<String, String> bookmarks = new HashMap<>();
@@ -54,15 +101,15 @@ public class BrowserWindow extends JFrame {
 
 		File resources = new File(".", "resources");
 		if (resources.mkdir()) {
-			Files.copy(getClass().getResourceAsStream("/resources/navix.ico"),
+			Files.copy(Objects.requireNonNull(getClass().getResourceAsStream("/resources/navix.ico")),
 					new File(resources, "navix.ico").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/newtab-dark.html"),
+			Files.copy(Objects.requireNonNull(getClass().getResourceAsStream("/resources/newtab-dark.html")),
 					new File(resources, "newtab-dark.html").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/style-dark.css"),
+			Files.copy(Objects.requireNonNull(getClass().getResourceAsStream("/resources/style-dark.css")),
 					new File(resources, "style-dark.css").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/newtab-light.html"),
+			Files.copy(Objects.requireNonNull(getClass().getResourceAsStream("/resources/newtab-light.html")),
 					new File(resources, "newtab-light.html").toPath());
-			Files.copy(getClass().getResourceAsStream("/resources/style-light.css"),
+			Files.copy(Objects.requireNonNull(getClass().getResourceAsStream("/resources/style-light.css")),
 					new File(resources, "style-light.css").toPath());
 		}
 
@@ -73,7 +120,6 @@ public class BrowserWindow extends JFrame {
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(bookmarkFile))) {
 			bookmarks.putAll((HashMap<String, String>) ois.readObject());
 		} catch (Exception e) {
-			e.printStackTrace();
 			refreshBookmarks();
 		}
 
@@ -92,21 +138,18 @@ public class BrowserWindow extends JFrame {
 		contextMenuButton = new JButton();
 		loadBar = new JProgressBar();
 		splitPane = new JSplitPane();
-		browserAddressField = new JTextField(100) {
-			private static final long serialVersionUID = -6518323374167056051L;
-
-			@Override
-			protected void paintComponent(Graphics g) {
-				Map<RenderingHints.Key, Object> rh = new HashMap<>();
-				rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-				rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				rh.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-				Graphics2D g2d = (Graphics2D) g;
-				g2d.setRenderingHints(rh);
-				super.paintComponent(g2d);
-			}
-		};
+		tooltip = new BetterJLabel();
+		tooltipTimer = new Timer(1000, e -> tooltip.setVisible(false));
+		browserAddressField = new BetterJTextField(100);
 		browserSearchField = new HintTextField("Search in page", 100);
+		suggestionsPopupMenu = new JPopupMenu();
+		suggestionTimer = new Timer(500, null);
+		suggestionTimer.addActionListener(e -> {
+			if (!browserAddressField.hasFocus()) {
+				suggestionTimer.stop();
+			}
+			updateSuggestions();
+		});
 
 		tabbedPane = new BrowserTabbedPane(this, homeButton, forwardNav, backwardNav,
 				reloadButton, addBookmarkButton, browserAddressField, browserSearchField);
@@ -114,18 +157,19 @@ public class BrowserWindow extends JFrame {
 		Main.downloadWindow.setVisible(false);
 
 		addListeners();
-		prepareNavBar(startURL, useOSR, isTransparent);
+		prepareNavBar(useOSR, isTransparent);
 
 		tabbedPane.setBorder(new EmptyBorder(0, 0, 0, 0));
-		tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent);
+		tabbedPane.addBrowserTab(cefApp, Main.settings.newTabURL, useOSR, isTransparent);
 	}
 
 	private void addListeners() {
 		addWindowListener(new NavixWindowListener(this, cefApp));
 	}
 
-	private void prepareNavBar(String startURL, boolean useOSR, boolean isTransparent) {
+	private void prepareNavBar(boolean useOSR, boolean isTransparent) {
 		browserAddressField.addActionListener(l -> {
+			suggestionsPopupMenu.setVisible(false);
 			String query = browserAddressField.getText();
 			try {
 				new URL(query);
@@ -136,6 +180,11 @@ public class BrowserWindow extends JFrame {
 				} else {
 					tabbedPane.getSelectedBrowser().loadURL(Main.settings.searchEngine + query);
 				}
+			}
+		});
+		browserAddressField.getDocument().addDocumentListener((SimpleDocumentListener) e -> {
+			if (browserAddressField.hasFocus()) {
+				suggestionTimer.restart();
 			}
 		});
 		browserAddressField.addFocusListener(new FocusAdapter() {
@@ -181,6 +230,14 @@ public class BrowserWindow extends JFrame {
 		browserSearchField.setBorder(new RoundedBorder(Color.LIGHT_GRAY.darker(), 1, 28, 5));
 		browserSearchField.setOpaque(false);
 		browserSearchField.setFont(new JLabel().getFont());
+
+		suggestionsPopupMenu.setVisible(false);
+		suggestionsPopupMenu.setFocusable(false);
+		suggestionsPopupMenu.setLightWeightPopupEnabled(false);
+		suggestionTimer.setRepeats(false);
+		
+		tooltip.setVisible(false);
+		tooltipTimer.setRepeats(false);
 
 		backwardNav.setEnabled(false);
 		forwardNav.setEnabled(false);
@@ -235,7 +292,7 @@ public class BrowserWindow extends JFrame {
 				tabbedPane.getSelectedBrowser().reload();
 			}
 		});
-		addTabButton.addActionListener(l -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
+		addTabButton.addActionListener(l -> tabbedPane.addBrowserTab(cefApp, Main.settings.newTabURL, useOSR, isTransparent));
 		addBookmarkButton.addActionListener(l -> {
 			String name = JOptionPane.showInputDialog("Bookmark name", "New Bookmark");
 			if (name != null) {
@@ -252,7 +309,7 @@ public class BrowserWindow extends JFrame {
 			JPopupMenu popup = new JPopupMenu();
 
 			JMenuItem newTab = new JMenuItem("New tab");
-			newTab.addActionListener(l1 -> tabbedPane.addBrowserTab(cefApp, startURL, useOSR, isTransparent));
+			newTab.addActionListener(l1 -> tabbedPane.addBrowserTab(cefApp, Main.settings.newTabURL, useOSR, isTransparent));
 			popup.add(newTab);
 
 			JMenuItem downloads = new JMenuItem("Downloads");
@@ -286,12 +343,16 @@ public class BrowserWindow extends JFrame {
 			toggleInspector.addActionListener(l1 -> {
 				if (splitPane.getRightComponent() == null) {
 					if (tabbedPane.getSelectedBrowser() != null) {
-						splitPane.setRightComponent(tabbedPane.getSelectedBrowser().getDevTools().getUIComponent());
-						splitPane.setDividerLocation(1000);
+						CefBrowser devTools = tabbedPane.getSelectedBrowser().getDevTools();
+						devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+						splitPane.setRightComponent(devTools.getUIComponent());
+						splitPane.setDividerLocation(0.7);
 					} else {
 						JOptionPane.showMessageDialog(this, "Cannot open inspector for current tab!");
 					}
 				} else {
+					devToolsComponentMap.get(splitPane.getRightComponent()).close(true);
+					devToolsComponentMap.remove(splitPane.getRightComponent());
 					splitPane.setRightComponent(null);
 				}
 			});
@@ -299,17 +360,46 @@ public class BrowserWindow extends JFrame {
 
 			popup.addSeparator();
 
+			JMenuItem print = new JMenuItem("Print");
+			print.addActionListener(l1 -> {
+				if (tabbedPane.getSelectedBrowser() != null) {
+					tabbedPane.getSelectedBrowser().print();
+				} else {
+					JOptionPane.showMessageDialog(this, "Cannot print current tab!");
+				}
+			});
+			popup.add(print);
+
+			JMenuItem printToPDF = new JMenuItem("Print to PDF");
+			printToPDF.addActionListener(l1 -> {
+				if (tabbedPane.getSelectedBrowser() != null) {
+					SwingUtilities.invokeLater(() -> {
+						PrintFrame printFrame = new PrintFrame(this, tabbedPane);
+						printFrame.setLocationRelativeTo(BrowserWindow.this);
+						printFrame.setVisible(true);
+					});
+				} else {
+					JOptionPane.showMessageDialog(this, "Cannot print current tab to PDF!");
+				}
+			});
+			popup.add(printToPDF);
+
+			popup.addSeparator();
+
 			JMenuItem exit = new JMenuItem("Exit");
-			exit.addActionListener(l1 -> System.exit(0));
+			exit.addActionListener(l1 -> {
+				cefApp.dispose();
+				BrowserWindow.this.dispose();
+			});
 			popup.add(exit);
 
-			popup.show(this, this.getWidth(), 0);
+			popup.show(contextMenuButton, 0, contextMenuButton.getHeight());
 		});
 
 		JPanel navBar = new JPanel(new GridBagLayout());
 
 		for (var bookmark : bookmarks.entrySet()) {
-			JButton bookmarkButton = new JButton(bookmark.getKey()) {
+			BetterJButton bookmarkButton = new BetterJButton(bookmark.getKey()) {
 				private static final long serialVersionUID = 7012838912951844369L;
 
 				@Override
@@ -347,9 +437,15 @@ public class BrowserWindow extends JFrame {
 		gbcX.fill = GridBagConstraints.HORIZONTAL;
 		gbcX.weightx = 8;
 		bottomPanel.add(loadBar, gbcX);
+		gbcX.fill = GridBagConstraints.HORIZONTAL;
+		gbcX.gridx = 1;
 		gbcX.gridy = 1;
 		gbcX.weightx = 10;
 		bottomPanel.add(bookmarksPanel, gbcX);
+		gbcX.fill = GridBagConstraints.NONE;
+		gbcX.gridx = 0;
+		gbcX.weightx = 1;
+		bottomPanel.add(tooltip, gbcX);
 
 		toolBar = new JToolBar();
 		toolBar.setFloatable(false);
@@ -425,7 +521,7 @@ public class BrowserWindow extends JFrame {
 		}
 		bookmarksPanel.removeAll();
 		for (var bookmark : bookmarks.entrySet()) {
-			JButton bookmarkButton = new JButton(bookmark.getKey()) {
+			BetterJButton bookmarkButton = new BetterJButton(bookmark.getKey()) {
 				private static final long serialVersionUID = 6390725135135905940L;
 
 				@Override
@@ -459,6 +555,46 @@ public class BrowserWindow extends JFrame {
 			bookmarksPanel.setVisible(true);
 		} else {
 			bookmarksPanel.setVisible(false);
+		}
+	}
+
+	private void updateSuggestions() {
+		if (Main.settings.enableSearchSuggestions) {
+			String searchString = browserAddressField.getText();
+			if (searchString.trim().length() == 0) {
+				suggestionsPopupMenu.setVisible(false);
+				return;
+			}
+			try {
+				URL url = new URL("https://suggestqueries.google.com/complete/search?client=chrome&gl=US&q=" + URLEncoder.encode(searchString, StandardCharsets.UTF_8));
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				conn.setRequestMethod("GET");
+				JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(conn.getInputStream())));
+				reader.setLenient(true);
+				JsonArray jsonArray = JsonParser.parseReader(reader).getAsJsonArray().get(1).getAsJsonArray();
+				suggestionsPopupMenu.removeAll();
+				jsonArray.forEach(jsonElement -> {
+					JMenuItem menuItem = new JMenuItem(jsonElement.getAsString());
+					menuItem.addActionListener(l -> {
+						browserAddressField.setText(menuItem.getText());
+						browserAddressField.getActionListeners()[0].actionPerformed(null);
+						suggestionsPopupMenu.setVisible(false);
+					});
+					suggestionsPopupMenu.add(menuItem);
+				});
+				suggestionsPopupMenu.revalidate();
+				suggestionsPopupMenu.repaint();
+				if (jsonArray.size() > 0) {
+					if (!suggestionsPopupMenu.isVisible()) {
+						suggestionsPopupMenu.setPopupSize(browserAddressField.getWidth(), 300);
+						suggestionsPopupMenu.show(browserAddressField, 0, browserAddressField.getHeight());
+					}
+				} else {
+					suggestionsPopupMenu.setVisible(false);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

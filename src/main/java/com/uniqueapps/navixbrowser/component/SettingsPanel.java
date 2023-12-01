@@ -1,17 +1,36 @@
 package com.uniqueapps.navixbrowser.component;
 
-import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.Main.Theme;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.Main.Theme;
 
 public class SettingsPanel extends JPanel {
 
@@ -35,7 +54,7 @@ public class SettingsPanel extends JPanel {
 		parent.add(panel, BorderLayout.NORTH);
 
 		// Title
-		JLabel title = new JLabel("Settings");
+		BetterJLabel title = new BetterJLabel("Settings");
 		title.setFont(title.getFont().deriveFont(20F));
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(0, 10, 5, 5);
@@ -47,7 +66,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// HAL
-		JLabel hal = new JLabel("Hardware acceleration");
+		BetterJLabel hal = new BetterJLabel("Hardware acceleration");
 		GridBagConstraints gbc1 = new GridBagConstraints();
 		gbc1.anchor = GridBagConstraints.WEST;
 		gbc1.insets = new Insets(0, 15, 5, 5);
@@ -72,7 +91,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// OSR
-		JLabel osr = new JLabel("Off-screen rendering");
+		BetterJLabel osr = new BetterJLabel("Off-screen rendering");
 		GridBagConstraints gbc3 = new GridBagConstraints();
 		gbc3.anchor = GridBagConstraints.WEST;
 		gbc3.insets = new Insets(0, 15, 5, 5);
@@ -97,7 +116,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// Search engine
-		JLabel searchEngine = new JLabel("Preferred search engine");
+		BetterJLabel searchEngine = new BetterJLabel("Preferred search engine");
 		GridBagConstraints gbc5 = new GridBagConstraints();
 		gbc5.ipadx = 18;
 		gbc5.anchor = GridBagConstraints.WEST;
@@ -106,8 +125,8 @@ public class SettingsPanel extends JPanel {
 		gbc5.gridy = 3;
 		panel.add(searchEngine, gbc5);
 
-		JComboBox<String> searchEngineList = new JComboBox<>();
-		searchEngineList.setModel(new DefaultComboBoxModel<>(engines.keySet().toArray(new String[] {})));
+		BetterJComboBox<String> searchEngineList = new BetterJComboBox<>();
+		searchEngineList.setModel(new DefaultComboBoxModel<>(engines.keySet().toArray(String[]::new)));
 		Object[] enginesArray = engines.values().toArray();
 		for (int i = 0; i < enginesArray.length; i++) {
 			if (enginesArray[i].equals(Main.settings.searchEngine)) {
@@ -135,7 +154,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// Theme
-		JLabel theme = new JLabel("Theme");
+		BetterJLabel theme = new BetterJLabel("Theme");
 		GridBagConstraints gbc7 = new GridBagConstraints();
 		gbc7.anchor = GridBagConstraints.WEST;
 		gbc7.insets = new Insets(0, 15, 5, 5);
@@ -143,8 +162,8 @@ public class SettingsPanel extends JPanel {
 		gbc7.gridy = 4;
 		panel.add(theme, gbc7);
 
-		JButton themeColor = new JButton("Select background color for modern theme");
-		JComboBox<Theme> themeList = new JComboBox<>();
+		BetterJButton themeColor = new BetterJButton("Select background color for modern theme");
+		BetterJComboBox<Theme> themeList = new BetterJComboBox<>();
 		themeList.setModel(new DefaultComboBoxModel<>(Theme.values()));
 		themeList.setSelectedItem(Main.settings.theme);
 		themeList.addItemListener(e -> {
@@ -189,6 +208,8 @@ public class SettingsPanel extends JPanel {
 				try (BufferedWriter writer = new BufferedWriter(new FileWriter("./themes/FlatLaf.properties", false))) {
 					writer.write("@bg = " + hex + "\n\n" +
 							"*.foreground = " + (Main.getTextColorForBackground(color) == Color.WHITE ? "#FFF" : "#000") + "\n" +
+							"*.selectionForeground = " + (Main.getTextColorForBackground(color) == Color.WHITE ? "#FFF" : "#000") + "\n" +
+							"*.caretForeground = " + (Main.getTextColorForBackground(color) == Color.WHITE ? "#FFF" : "#000") + "\n" +
 							"*.background = @bg\n" +
 							"@background = @bg\n" +
 							"desktop = @bg\n" +
@@ -217,7 +238,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// Launch maximized
-		JLabel launchMaximized = new JLabel("Launch maximized");
+		BetterJLabel launchMaximized = new BetterJLabel("Launch maximized");
 		GridBagConstraints gbc9 = new GridBagConstraints();
 		gbc9.anchor = GridBagConstraints.WEST;
 		gbc9.insets = new Insets(0, 15, 5, 5);
@@ -242,7 +263,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// Ad block
-		JLabel adBlock = new JLabel("Enable ad block");
+		BetterJLabel adBlock = new BetterJLabel("Enable ad block");
 		GridBagConstraints gbc11 = new GridBagConstraints();
 		gbc11.anchor = GridBagConstraints.WEST;
 		gbc11.insets = new Insets(0, 15, 5, 5);
@@ -267,7 +288,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// Tracker block
-		JLabel trackerBlock = new JLabel("Enable tracker block");
+		BetterJLabel trackerBlock = new BetterJLabel("Enable tracker block");
 		GridBagConstraints gbc13 = new GridBagConstraints();
 		gbc13.anchor = GridBagConstraints.WEST;
 		gbc13.insets = new Insets(0, 15, 5, 5);
@@ -292,7 +313,7 @@ public class SettingsPanel extends JPanel {
 
 
 		// Safe browsing
-		JLabel safeBrowsing = new JLabel("Enable safe browsing");
+		BetterJLabel safeBrowsing = new BetterJLabel("Enable safe browsing");
 		GridBagConstraints gbc15 = new GridBagConstraints();
 		gbc15.anchor = GridBagConstraints.WEST;
 		gbc15.insets = new Insets(0, 15, 5, 5);
@@ -315,7 +336,220 @@ public class SettingsPanel extends JPanel {
 		gbc16.gridy = 8;
 		panel.add(safeBrowsingEnabled, gbc16);
 
-		JLabel bottomInfo = new JLabel("Version " + Main.VERSION + " (Chromium "
+
+		// Command-line arguments
+		BetterJLabel cmdLineArgs = new BetterJLabel("Command-line arguments (JCEF)");
+		GridBagConstraints gbc17 = new GridBagConstraints();
+		gbc17.anchor = GridBagConstraints.WEST;
+		gbc17.insets = new Insets(5, 15, 0, 5);
+		gbc17.gridx = 0;
+		gbc17.gridy = 9;
+		panel.add(cmdLineArgs, gbc17);
+
+		BetterJTextField argsField = new BetterJTextField();
+		if (Main.settings.args.length > 0) {
+			String argsString = Arrays.toString(Main.settings.args);
+			argsField.setText(argsString.substring(1, argsString.length() - 1));
+		}
+		argsField.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				if (!browserWindow.browserIsInFocus)
+					return;
+				browserWindow.browserIsInFocus = false;
+				KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
+				argsField.requestFocusInWindow();
+			}
+		});
+		GridBagConstraints gbc18 = new GridBagConstraints();
+		gbc18.insets = new Insets(5, 5, 0, 0);
+		gbc18.anchor = GridBagConstraints.NORTH;
+		gbc18.fill = GridBagConstraints.HORIZONTAL;
+		gbc18.gridx = 1;
+		gbc18.gridy = 9;
+		panel.add(argsField, gbc18);
+
+		BetterJButton setArgs = new BetterJButton("Save");
+		setArgs.addActionListener(l -> {
+			if (argsField.getText().isEmpty()) {
+				Main.settings.args = new String[]{};
+			} else if (!argsField.getText().contains(",")) {
+				Main.settings.args = new String[]{argsField.getText()};
+			} else {
+				java.util.List<String> args = new java.util.ArrayList<>(List.of(argsField.getText().split(",")));
+				args.replaceAll(String::strip);
+				Main.settings.args = args.toArray(String[]::new);
+			}
+			Main.refreshSettings();
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Saved arguments!"));
+		});
+		GridBagConstraints gbc19 = new GridBagConstraints();
+		gbc19.insets = new Insets(5, 5, 0, 5);
+		gbc19.anchor = GridBagConstraints.EAST;
+		gbc19.fill = GridBagConstraints.HORIZONTAL;
+		gbc19.gridx = 2;
+		gbc19.gridy = 9;
+		panel.add(setArgs, gbc19);
+
+		BetterJLabel argsInfo = new BetterJLabel("Will be applied on next launch. Example: arg1, arg2, ...");
+		GridBagConstraints gbc20 = new GridBagConstraints();
+		gbc20.insets = new Insets(2, 5, 5, 0);
+		gbc20.anchor = GridBagConstraints.WEST;
+		gbc20.gridx = 1;
+		gbc20.gridy = 10;
+		panel.add(argsInfo, gbc20);
+
+
+		// Safe browsing
+		BetterJLabel forceDarkMode = new BetterJLabel("Force dark mode in sites");
+		GridBagConstraints gbc21 = new GridBagConstraints();
+		gbc21.anchor = GridBagConstraints.WEST;
+		gbc21.insets = new Insets(0, 15, 5, 5);
+		gbc21.gridx = 0;
+		gbc21.gridy = 11;
+		panel.add(forceDarkMode, gbc21);
+
+		JCheckBox forceDarkModeEnabled = new JCheckBox();
+		forceDarkModeEnabled.setSelected(Main.settings.forceDarkMode);
+		forceDarkModeEnabled.addChangeListener(l -> {
+			if (forceDarkModeEnabled.isSelected() != Main.settings.forceDarkMode) {
+				Main.settings.forceDarkMode = forceDarkModeEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
+		GridBagConstraints gbc22 = new GridBagConstraints();
+		gbc22.insets = new Insets(5, 1, 5, 0);
+		gbc22.anchor = GridBagConstraints.NORTHWEST;
+		gbc22.gridx = 1;
+		gbc22.gridy = 11;
+		panel.add(forceDarkModeEnabled, gbc22);
+
+
+		// Search suggestions
+		BetterJLabel searchSuggestions = new BetterJLabel("Enable search suggestions");
+		GridBagConstraints gbc23 = new GridBagConstraints();
+		gbc23.anchor = GridBagConstraints.WEST;
+		gbc23.insets = new Insets(0, 15, 5, 5);
+		gbc23.gridx = 0;
+		gbc23.gridy = 12;
+		panel.add(searchSuggestions, gbc23);
+
+		JCheckBox searchSuggestionsEnabled = new JCheckBox();
+		searchSuggestionsEnabled.setSelected(Main.settings.enableSearchSuggestions);
+		searchSuggestionsEnabled.addChangeListener(l -> {
+			if (searchSuggestionsEnabled.isSelected() != Main.settings.enableSearchSuggestions) {
+				Main.settings.enableSearchSuggestions = searchSuggestionsEnabled.isSelected();
+				Main.refreshSettings();
+			}
+		});
+		GridBagConstraints gbc24 = new GridBagConstraints();
+		gbc24.insets = new Insets(5, 1, 5, 0);
+		gbc24.anchor = GridBagConstraints.NORTHWEST;
+		gbc24.gridx = 1;
+		gbc24.gridy = 12;
+		panel.add(searchSuggestionsEnabled, gbc24);
+
+		
+		// New tab URL
+		BetterJLabel newTabURL = new BetterJLabel("New tab URL");
+        GridBagConstraints gbc25 = new GridBagConstraints();
+        gbc25.anchor = GridBagConstraints.WEST;
+        gbc25.insets = new Insets(5, 15, 0, 5);
+        gbc25.gridx = 0;
+        gbc25.gridy = 13;
+        panel.add(newTabURL, gbc25);
+
+		BetterJTextField newTabURLField = new BetterJTextField();
+        newTabURLField.setText(Main.settings.newTabURL);
+        newTabURLField.addFocusListener(new FocusAdapter() {
+        	@Override
+			public void focusGained(FocusEvent e) {
+				if (!browserWindow.browserIsInFocus)
+					return;
+				browserWindow.browserIsInFocus = false;
+				KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
+				argsField.requestFocusInWindow();
+			}
+        });
+        GridBagConstraints gbc26 = new GridBagConstraints();
+        gbc26.insets = new Insets(5, 5, 0, 0);
+        gbc26.anchor = GridBagConstraints.NORTH;
+        gbc26.fill = GridBagConstraints.HORIZONTAL;
+        gbc26.gridx = 1;
+        gbc26.gridy = 13;
+        panel.add(newTabURLField, gbc26);
+
+		BetterJButton setNewTabURL = new BetterJButton("Save");
+        setNewTabURL.addActionListener(l -> {
+            Main.settings.newTabURL = newTabURLField.getText();
+            Main.refreshSettings();
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Saved URL!"));
+        });
+        GridBagConstraints gbc27 = new GridBagConstraints();
+        gbc27.insets = new Insets(5, 5, 0, 5);
+        gbc27.anchor = GridBagConstraints.EAST;
+        gbc27.fill = GridBagConstraints.HORIZONTAL;
+        gbc27.gridx = 2;
+        gbc27.gridy = 13;
+        panel.add(setNewTabURL, gbc27);
+        
+        
+        // Debug port
+		BetterJLabel debugPort = new BetterJLabel("Debug port");
+        GridBagConstraints gbc28 = new GridBagConstraints();
+        gbc28.anchor = GridBagConstraints.WEST;
+        gbc28.insets = new Insets(5, 15, 0, 5);
+        gbc28.gridx = 0;
+        gbc28.gridy = 14;
+        panel.add(debugPort, gbc28);
+
+		BetterJTextField debugPortField = new BetterJTextField();
+        debugPortField.setText(Integer.toString(Main.settings.debugPort));
+        debugPortField.addFocusListener(new FocusAdapter() {
+        	@Override
+			public void focusGained(FocusEvent e) {
+				if (!browserWindow.browserIsInFocus)
+					return;
+				browserWindow.browserIsInFocus = false;
+				KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
+				argsField.requestFocusInWindow();
+			}
+        });
+        GridBagConstraints gbc29 = new GridBagConstraints();
+        gbc29.insets = new Insets(5, 5, 0, 0);
+        gbc29.anchor = GridBagConstraints.NORTH;
+        gbc29.fill = GridBagConstraints.HORIZONTAL;
+        gbc29.gridx = 1;
+        gbc29.gridy = 14;
+        panel.add(debugPortField, gbc29);
+
+		BetterJButton setDebugPort = new BetterJButton("Save");
+        setDebugPort.addActionListener(l -> {
+        	try {
+        		int port = Integer.parseInt(debugPortField.getText());
+        		if (port >= 0 && port <= 65535) {
+        			Main.settings.debugPort = port;
+            		Main.refreshSettings();
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Saved port! Will be used on next launch."));
+        		} else {
+        			debugPortField.setText(Integer.toString(Main.settings.debugPort));
+        			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Not a valid port number! Must be between 0 and 65535."));
+        		}
+        	} catch (Exception e) {
+        		debugPortField.setText(Integer.toString(Main.settings.debugPort));
+        		SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(browserWindow, "Not a valid port number!"));
+        	}
+        });
+        GridBagConstraints gbc30 = new GridBagConstraints();
+        gbc30.insets = new Insets(5, 5, 0, 5);
+        gbc30.anchor = GridBagConstraints.EAST;
+        gbc30.fill = GridBagConstraints.HORIZONTAL;
+        gbc30.gridx = 2;
+        gbc30.gridy = 14;
+        panel.add(setDebugPort, gbc30);
+
+
+		BetterJLabel bottomInfo = new BetterJLabel("Version " + Main.VERSION + " (Chromium "
 				+ browserWindow.cefApp.getVersion().getChromeVersion() + ")."
 				+ " Changes to graphics settings will be applied on next launch.");
 

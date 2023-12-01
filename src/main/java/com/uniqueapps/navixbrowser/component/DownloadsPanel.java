@@ -11,13 +11,13 @@ public class DownloadsPanel extends JPanel {
 	private static final long serialVersionUID = 3069119638383824437L;
 
 	ScrollablePanel panel;
-	JLabel title;
+	BetterJLabel title;
 
 	public DownloadsPanel() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		panel = new ScrollablePanel();
 		panel.setLayout(new GridBagLayout());
-		title = new JLabel("Downloads");
+		title = new BetterJLabel("Downloads");
 		title.setFont(title.getFont().deriveFont(20F));
 		title.setBorder(new EmptyBorder(0, 10, 0, 0));
 		GridBagConstraints gbc = new GridBagConstraints();

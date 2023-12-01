@@ -1,25 +1,17 @@
 package com.uniqueapps.navixbrowser.component;
 
-import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.text.SimpleDateFormat;
-
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.border.EmptyBorder;
-
-import org.cef.callback.CefDownloadItemCallback;
-
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.object.DownloadObject;
 import com.uniqueapps.navixbrowser.object.DownloadObject.DownloadAction;
 import com.uniqueapps.navixbrowser.object.DownloadObject.DownloadState;
+import org.cef.callback.CefDownloadItemCallback;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
 
 public class DownloadObjectPanel extends JPanel {
 
@@ -27,19 +19,19 @@ public class DownloadObjectPanel extends JPanel {
 
 	public DownloadObject downloadObject;
 	public CefDownloadItemCallback callback;
-	public JProgressBar progressBar = new JProgressBar();
-	public JPanel actions = new JPanel(new GridLayout(1, 0, 3, 5));
-	public JLabel downloadSpeed = new JLabel("0 bytes/s");
-	public JLabel partDone = new JLabel("0 bytes / 0 bytes");
+	public BetterJProgressBar progressBar = new BetterJProgressBar();
+	public JPanel actions = new JPanel(new GridBagLayout());
+	public BetterJLabel downloadSpeed = new BetterJLabel("0 bytes/s");
+	public BetterJLabel partDone = new BetterJLabel("0 bytes / 0 bytes");
 
 	public DownloadObjectPanel(BrowserWindow browserWindow, DownloadObject downloadObject) {
 		this.downloadObject = downloadObject;
 		progressBar.setStringPainted(true);
 		setLayout(new GridBagLayout());
 		setBorder(new EmptyBorder(5, 40, 5, 40));
-		JLabel textName = new JLabel(downloadObject.name);
+		BetterJLabel textName = new BetterJLabel(downloadObject.name);
 		textName.setFont(textName.getFont().deriveFont(18.0F));
-		JLabel textUrl = new JLabel(downloadObject.url);
+		BetterJLabel textUrl = new BetterJLabel(downloadObject.url);
 		textUrl.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseEntered(MouseEvent e) {
@@ -60,13 +52,13 @@ public class DownloadObjectPanel extends JPanel {
 						false);
 			}
 		});
-		JLabel textDate = new JLabel(new SimpleDateFormat("dd MMMM yyyy hh:mm:ss aa").format(downloadObject.date));
+		BetterJLabel textDate = new BetterJLabel(new SimpleDateFormat("dd MMMM yyyy hh:mm:ss aa").format(downloadObject.date));
 
-		JButton pause = new JButton("Pause");
+		BetterJButton pause = new BetterJButton("Pause");
 		pause.setEnabled(downloadObject.downloadState == DownloadState.DOWNLOADING);
-		JButton resume = new JButton("Resume");
+		BetterJButton resume = new BetterJButton("Resume");
 		resume.setEnabled(false);
-		JButton cancel = new JButton("Cancel");
+		BetterJButton cancel = new BetterJButton("Cancel");
 		downloadSpeed.setAlignmentX(JLabel.LEFT_ALIGNMENT);
 		partDone.setAlignmentX(JLabel.LEFT_ALIGNMENT);
 
@@ -93,11 +85,13 @@ public class DownloadObjectPanel extends JPanel {
 			}
 		});
 
-		actions.add(pause);
-		actions.add(resume);
-		actions.add(cancel);
-		actions.add(downloadSpeed);
-		actions.add(partDone);
+		GridBagConstraints gbcA = new GridBagConstraints();
+		gbcA.insets = new Insets(0, 5, 0, 5);
+		actions.add(pause, gbcA);
+		actions.add(resume, gbcA);
+		actions.add(cancel, gbcA);
+		actions.add(downloadSpeed, gbcA);
+		actions.add(partDone, gbcA);
 
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.ipady = 2;
@@ -126,6 +120,7 @@ public class DownloadObjectPanel extends JPanel {
 			gbc3.weighty = 1;
 			gbc3.gridy = 3;
 			gbc3.fill = GridBagConstraints.HORIZONTAL;
+			gbc3.insets = new Insets(2, 0, 0, 0);
 			add(progressBar, gbc3);
 		}
 
@@ -135,6 +130,7 @@ public class DownloadObjectPanel extends JPanel {
 			gbc4.anchor = GridBagConstraints.WEST;
 			gbc4.weighty = 2;
 			gbc4.gridy = 4;
+			gbc4.insets = new Insets(2, 0, 0, 5);
 			add(actions, gbc4);
 		}
 	}

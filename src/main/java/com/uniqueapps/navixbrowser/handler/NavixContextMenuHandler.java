@@ -37,7 +37,7 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
     private static final int SCREENSHOT = 26506;
     private static final int VIEW_PAGE_SOURCE = 26507;
     private static final int INSPECT = 26508;
-    private static final int CANCEL = 26509;
+    //private static final int CANCEL = 26509;
 
     private static final int COPY = 26510;
     private static final int SAVE_AS = 26511;
@@ -61,7 +61,6 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
     public void onBeforeContextMenu(CefBrowser browser, CefFrame frame, CefContextMenuParams params,
                                     CefMenuModel model) {
 
-        super.onBeforeContextMenu(browser, frame, params, model);
         model.clear();
 
         if (params.getMediaType() != MediaType.CM_MEDIATYPE_IMAGE) {
@@ -124,7 +123,6 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                 }
                 model.addSeparator();
                 model.addItem(INSPECT, "Inspect");
-                model.addSeparator();
             } else if (params.getSelectionText() != null && !params.getSelectionText().isEmpty()) {
                 model.addItem(COPY, "Copy");
                 if (isValidURL(params.getSelectionText())) {
@@ -134,7 +132,6 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                 }
                 model.addSeparator();
                 model.addItem(INSPECT, "Inspect");
-                model.addSeparator();
             } else if (params.getLinkUrl() != null && !params.getLinkUrl().isEmpty()) {
                 if (isValidURL(params.getLinkUrl())) {
                     model.addItem(OPEN_IN_NEW_TAB, "Open in new tab");
@@ -145,7 +142,6 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                     }
                     model.addSeparator();
                     model.addItem(INSPECT, "Inspect");
-                    model.addSeparator();
                 }
             } else {
                 if (browser.canGoBack())
@@ -162,7 +158,6 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                 model.addSeparator();
                 model.addItem(VIEW_PAGE_SOURCE, "View page source");
                 model.addItem(INSPECT, "Inspect");
-                model.addSeparator();
             }
         } else {
             model.addItem(COPY, "Copy image");
@@ -170,26 +165,32 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
             model.addItem(SAVE_AS, "Save image as");
             model.addSeparator();
             model.addItem(INSPECT, "Inspect");
-            model.addSeparator();
         }
-        model.addItem(CANCEL, "Cancel");
     }
 
     @Override
     public boolean onContextMenuCommand(CefBrowser browser, CefFrame frame, CefContextMenuParams params, int commandId,
                                         int eventFlags) {
 
-        if (commandId == CANCEL)
-            return false;
         var success = true;
 
         if (params.getMediaType() != MediaType.CM_MEDIATYPE_IMAGE) {
             if (params.isEditable()) {
                 // Default JCEF handlers
                 if (commandId == INSPECT) {
-                    browserWindow.splitPane.setRightComponent(
-                            browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
-                    browserWindow.splitPane.setDividerLocation(1000);
+                    if (browserWindow.splitPane.getRightComponent() == null) {
+                        CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                        BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                        browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                        browserWindow.splitPane.setDividerLocation(0.7);
+                    } else {
+                        BrowserWindow.devToolsComponentMap.get(browserWindow.splitPane.getRightComponent()).close(true);
+                        BrowserWindow.devToolsComponentMap.remove(browserWindow.splitPane.getRightComponent());
+                        CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                        BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                        browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                        browserWindow.splitPane.setDividerLocation(0.7);
+                    }
                     return true;
                 }
                 return false;
@@ -210,9 +211,19 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                     }
                 }
                 if (commandId == INSPECT) {
-                    browserWindow.splitPane.setRightComponent(
-                            browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
-                    browserWindow.splitPane.setDividerLocation(1000);
+                    if (browserWindow.splitPane.getRightComponent() == null) {
+                        CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                        BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                        browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                        browserWindow.splitPane.setDividerLocation(0.7);
+                    } else {
+                        BrowserWindow.devToolsComponentMap.get(browserWindow.splitPane.getRightComponent()).close(true);
+                        BrowserWindow.devToolsComponentMap.remove(browserWindow.splitPane.getRightComponent());
+                        CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                        BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                        browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                        browserWindow.splitPane.setDividerLocation(0.7);
+                    }
                 }
             } else if (params.getLinkUrl() != null && !params.getLinkUrl().isEmpty()) {
                 if (isValidURL(params.getLinkUrl())) {
@@ -228,9 +239,19 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                         }
                     }
                     if (commandId == INSPECT) {
-                        browserWindow.splitPane.setRightComponent(browser
-                                .getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
-                        browserWindow.splitPane.setDividerLocation(1000);
+                        if (browserWindow.splitPane.getRightComponent() == null) {
+                            CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                            BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                            browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                            browserWindow.splitPane.setDividerLocation(0.7);
+                        } else {
+                            BrowserWindow.devToolsComponentMap.get(browserWindow.splitPane.getRightComponent()).close(true);
+                            BrowserWindow.devToolsComponentMap.remove(browserWindow.splitPane.getRightComponent());
+                            CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                            BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                            browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                            browserWindow.splitPane.setDividerLocation(0.7);
+                        }
                     }
                 }
             } else {
@@ -290,9 +311,19 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                                 false);
                         break;
                     case INSPECT:
-                        browserWindow.splitPane.setRightComponent(
-                                browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
-                        browserWindow.splitPane.setDividerLocation(1000);
+                        if (browserWindow.splitPane.getRightComponent() == null) {
+                            CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                            BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                            browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                            browserWindow.splitPane.setDividerLocation(0.7);
+                        } else {
+                            BrowserWindow.devToolsComponentMap.get(browserWindow.splitPane.getRightComponent()).close(true);
+                            BrowserWindow.devToolsComponentMap.remove(browserWindow.splitPane.getRightComponent());
+                            CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                            BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                            browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                            browserWindow.splitPane.setDividerLocation(0.7);
+                        }
                         break;
                     default:
                         success = false;
@@ -333,9 +364,20 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                     });
                     break;
                 case INSPECT:
-                    browserWindow.splitPane.setRightComponent(
-                            browser.getDevTools(new Point(params.getXCoord(), params.getYCoord())).getUIComponent());
-                    browserWindow.splitPane.setDividerLocation(0.7);
+                    if (browserWindow.splitPane.getRightComponent() == null) {
+                        CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                        BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                        browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                        browserWindow.splitPane.setDividerLocation(0.7);
+                    } else {
+                        BrowserWindow.devToolsComponentMap.get(browserWindow.splitPane.getRightComponent()).close(true);
+                        BrowserWindow.devToolsComponentMap.remove(browserWindow.splitPane.getRightComponent());
+                        CefBrowser devTools = browser.getDevTools(new Point(params.getXCoord(), params.getYCoord()));
+                        BrowserWindow.devToolsComponentMap.put(devTools.getUIComponent(), devTools);
+                        browserWindow.splitPane.setRightComponent(devTools.getUIComponent());
+                        browserWindow.splitPane.setDividerLocation(0.7);
+                    }
+                    break;
                 default:
                     success = false;
                     break;

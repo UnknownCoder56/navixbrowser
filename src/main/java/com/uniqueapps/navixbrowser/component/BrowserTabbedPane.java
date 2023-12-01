@@ -1,11 +1,24 @@
 package com.uniqueapps.navixbrowser.component;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.LayoutManager;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Area;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -15,18 +28,34 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 
-import com.formdev.flatlaf.ui.FlatTabbedPaneUI;
-import com.uniqueapps.navixbrowser.handler.*;
 import org.cef.CefApp;
 import org.cef.CefClient;
 import org.cef.browser.CefBrowser;
 
+import com.formdev.flatlaf.ui.FlatTabbedPaneUI;
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.Main.Theme;
+import com.uniqueapps.navixbrowser.handler.NavixContextMenuHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDownloadHandler;
+import com.uniqueapps.navixbrowser.handler.NavixDragHandler;
+import com.uniqueapps.navixbrowser.handler.NavixFocusHandler;
+import com.uniqueapps.navixbrowser.handler.NavixLoadHandler;
+import com.uniqueapps.navixbrowser.handler.NavixPrintHandler;
+import com.uniqueapps.navixbrowser.handler.NavixRequestHandler;
 
 public class BrowserTabbedPane extends JTabbedPane {
 
@@ -36,9 +65,10 @@ public class BrowserTabbedPane extends JTabbedPane {
     JTextField browserField;
     public static Map<Component, CefBrowser> browserComponentMap = new HashMap<>();
     private static final ImageIcon closeImage;
+    private static final ImageIcon closeHoverImage;
 
-    private static final Color tabColorDarkMode = Color.DARK_GRAY.darker();
-    private static final Color tabColorLightMode = Color.GRAY;
+    private static final Color TAB_COLOR_DARK_MODE = Color.DARK_GRAY.darker();
+    private static final Color TAB_COLOR_LIGHT_MODE = Color.GRAY.brighter();
 
     private boolean dragging = false;
     private Point currentMouseLocation = null;
@@ -59,10 +89,6 @@ public class BrowserTabbedPane extends JTabbedPane {
 
         @Override
         protected Insets getTabAreaInsets(int tabPlacement) {
-            return insets;
-        }
-
-        public Insets getInsets() {
             return insets;
         }
 
@@ -127,6 +153,9 @@ public class BrowserTabbedPane extends JTabbedPane {
         try {
             closeImage = new ImageIcon(ImageIO
                     .read(Objects.requireNonNull(BrowserTabbedPane.class.getResourceAsStream("/images/cross.png")))
+                    .getScaledInstance(20, 20, BufferedImage.SCALE_SMOOTH));
+            closeHoverImage = new ImageIcon(ImageIO
+                    .read(Objects.requireNonNull(BrowserTabbedPane.class.getResourceAsStream("/images/cross-hover.png")))
                     .getScaledInstance(20, 20, BufferedImage.SCALE_SMOOTH));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -253,6 +282,8 @@ public class BrowserTabbedPane extends JTabbedPane {
                 reloadButton.setEnabled(false);
                 addBookmarkButton.setEnabled(false);
                 if (windowFrame.splitPane.getRightComponent() != null) {
+                    BrowserWindow.devToolsComponentMap.get(windowFrame.splitPane.getRightComponent()).close(true);
+                    BrowserWindow.devToolsComponentMap.remove(windowFrame.splitPane.getRightComponent());
                     windowFrame.splitPane.setRightComponent(null);
                 }
             } else if (!getSelectedBrowser().getURL().contains("newtab-dark.html") && !getSelectedBrowser().getURL().contains("newtab-light.html")) {
@@ -275,6 +306,8 @@ public class BrowserTabbedPane extends JTabbedPane {
                 addBookmarkButton.setEnabled(true);
                 browserField.setText(getSelectedBrowser().getURL());
                 if (windowFrame.splitPane.getRightComponent() != null) {
+                    BrowserWindow.devToolsComponentMap.get(windowFrame.splitPane.getRightComponent()).close(true);
+                    BrowserWindow.devToolsComponentMap.remove(windowFrame.splitPane.getRightComponent());
                     windowFrame.splitPane.setRightComponent(null);
                 }
             } else {
@@ -297,6 +330,8 @@ public class BrowserTabbedPane extends JTabbedPane {
                 addBookmarkButton.setEnabled(true);
                 browserField.setText("navix://home");
                 if (windowFrame.splitPane.getRightComponent() != null) {
+                    BrowserWindow.devToolsComponentMap.get(windowFrame.splitPane.getRightComponent()).close(true);
+                    BrowserWindow.devToolsComponentMap.remove(windowFrame.splitPane.getRightComponent());
                     windowFrame.splitPane.setRightComponent(null);
                 }
             }
@@ -391,34 +426,8 @@ public class BrowserTabbedPane extends JTabbedPane {
         if (newTitle.length() > 15) {
             newTitle = newTitle.substring(0, 12) + "...";
         }
-        JPanel tabPanel = new JPanel(new BorderLayout(4, 4)) {
-            private static final long serialVersionUID = 3725666626083864341L;
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                if (Main.settings.theme != Theme.System) {
-                    g2d.setColor(windowFrame.getBackground());
-                    g2d.fill(g2d.getClip());
-
-                    TopEnd topEnd = new TopEnd(getWidth(), getHeight(), 30);
-                    GradientPaint gradientPaint = new GradientPaint(
-                            0,
-                            0,
-                            getTabColor(),
-                            0,
-                            g2d.getClip().getBounds().height,
-                            windowFrame.getBackground());
-                    g2d.setPaint(gradientPaint);
-                    g2d.fill(topEnd);
-                }
-            }
-        };
-        JLabel tabInfoLabel = new JLabel(newTitle);
-        tabInfoLabel.setForeground(Main.getTextColorForBackground());
-        tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        JPanel tabPanel = makeBasicTabPanel();
+        BetterJLabel tabInfoLabel = makeBasicTabInfoLabel(newTitle);
         SwingUtilities.invokeLater(() -> {
             try {
                 tabInfoLabel.setIcon(new ImageIcon(
@@ -426,24 +435,10 @@ public class BrowserTabbedPane extends JTabbedPane {
             } catch (IOException ignored) {
             }
         });
-        tabPanel.add(tabInfoLabel, BorderLayout.CENTER);
-        JButton closeTabButton = new JButton();
-        closeTabButton.setBorder(new EmptyBorder(5, 5, 5, 5));
-        if (Main.settings.theme != Theme.System) {
-            closeTabButton.setBackground(new Color(0x0, true));
-            closeTabButton.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    closeTabButton.setBackground(new Color(0, 0, 0, 50));
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    closeTabButton.setBackground(new Color(0x0, true));
-                }
-            });
-        }
-        closeTabButton.setIcon(closeImage);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 4, 2, 2);
+        tabPanel.add(tabInfoLabel, gbc);
+        JButton closeTabButton = makeBasicCloseButton();
         closeTabButton.addActionListener(l -> {
             if (tabbedPane.getTabCount() > 1) {
                 tabbedPane.removeBrowserTab(cefBrowser);
@@ -453,58 +448,19 @@ public class BrowserTabbedPane extends JTabbedPane {
                 windowFrame.dispose();
             }
         });
-        tabPanel.add(closeTabButton, BorderLayout.EAST);
+        gbc.insets = new Insets(2, 2, 2, 4);
+        tabPanel.add(closeTabButton, gbc);
         return tabPanel;
     }
 
     public static JPanel generateSettingsTabPanel(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane,
                                                   CefApp cefApp, Component settingsDialog) {
-        JPanel tabPanel = new JPanel(new BorderLayout(4, 4)) {
-            private static final long serialVersionUID = 3725666626083864341L;
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                if (Main.settings.theme != Theme.System) {
-                    g2d.setColor(windowFrame.getBackground());
-                    g2d.fill(g2d.getClip());
-
-                    TopEnd topEnd = new TopEnd(getWidth(), getHeight(), 30);
-                    GradientPaint gradientPaint = new GradientPaint(
-                            0,
-                            0,
-                            getTabColor(),
-                            0,
-                            g2d.getClip().getBounds().height,
-                            windowFrame.getBackground());
-                    g2d.setPaint(gradientPaint);
-                    g2d.fill(topEnd);
-                }
-            }
-        };
-        JLabel tabInfoLabel = new JLabel("Settings");
-        tabInfoLabel.setForeground(Main.getTextColorForBackground());
-        tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        tabPanel.add(tabInfoLabel, BorderLayout.CENTER);
-        JButton closeTabButton = new JButton();
-        closeTabButton.setBorder(new EmptyBorder(5, 5, 5, 5));
-        if (Main.settings.theme != Theme.System) {
-            closeTabButton.setBackground(new Color(0x0, true));
-            closeTabButton.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    closeTabButton.setBackground(new Color(0, 0, 0, 50));
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    closeTabButton.setBackground(new Color(0x0, true));
-                }
-            });
-        }
-        closeTabButton.setIcon(closeImage);
+        JPanel tabPanel = makeBasicTabPanel();
+        BetterJLabel tabInfoLabel = makeBasicTabInfoLabel("Settings");
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 4, 2, 2);
+        tabPanel.add(tabInfoLabel, gbc);
+        JButton closeTabButton = makeBasicCloseButton();
         closeTabButton.addActionListener(l -> {
             if (tabbedPane.getTabCount() > 1) {
                 tabbedPane.removeSettingsTab(settingsDialog);
@@ -514,58 +470,19 @@ public class BrowserTabbedPane extends JTabbedPane {
                 windowFrame.dispose();
             }
         });
-        tabPanel.add(closeTabButton, BorderLayout.EAST);
+        gbc.insets = new Insets(2, 2, 2, 4);
+        tabPanel.add(closeTabButton, gbc);
         return tabPanel;
     }
 
     public static JPanel generateDownloadsTabPanel(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane,
                                                    CefApp cefApp, Component downloadsDialog) {
-        JPanel tabPanel = new JPanel(new BorderLayout(4, 4)) {
-            private static final long serialVersionUID = 3725666626083864341L;
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                if (Main.settings.theme != Theme.System) {
-                    g2d.setColor(windowFrame.getBackground());
-                    g2d.fill(g2d.getClip());
-
-                    TopEnd topEnd = new TopEnd(getWidth(), getHeight(), 30);
-                    GradientPaint gradientPaint = new GradientPaint(
-                            0,
-                            0,
-                            getTabColor(),
-                            0,
-                            g2d.getClip().getBounds().height,
-                            windowFrame.getBackground());
-                    g2d.setPaint(gradientPaint);
-                    g2d.fill(topEnd);
-                }
-            }
-        };
-        JLabel tabInfoLabel = new JLabel("Downloads");
-        tabInfoLabel.setForeground(Main.getTextColorForBackground());
-        tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        tabPanel.add(tabInfoLabel, BorderLayout.CENTER);
-        JButton closeTabButton = new JButton();
-        closeTabButton.setBorder(new EmptyBorder(5, 5, 5, 5));
-        if (Main.settings.theme != Theme.System) {
-            closeTabButton.setBackground(new Color(0x0, true));
-            closeTabButton.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    closeTabButton.setBackground(new Color(0, 0, 0, 50));
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    closeTabButton.setBackground(new Color(0x0, true));
-                }
-            });
-        }
-        closeTabButton.setIcon(closeImage);
+        JPanel tabPanel = makeBasicTabPanel();
+        BetterJLabel tabInfoLabel = makeBasicTabInfoLabel("Downloads");
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 4, 2, 2);
+        tabPanel.add(tabInfoLabel, gbc);
+        JButton closeTabButton = makeBasicCloseButton();
         closeTabButton.addActionListener(l -> {
             if (tabbedPane.getTabCount() > 1) {
                 tabbedPane.removeDownloadsTab(downloadsDialog);
@@ -575,16 +492,75 @@ public class BrowserTabbedPane extends JTabbedPane {
                 windowFrame.dispose();
             }
         });
-        tabPanel.add(closeTabButton, BorderLayout.EAST);
+        gbc.insets = new Insets(2, 2, 2, 4);
+        tabPanel.add(closeTabButton, gbc);
         return tabPanel;
     }
 
-    public void applyThemeChange() {
+    private static JPanel makeBasicTabPanel() {
+        return new JPanel(new GridBagLayout()) {
+            private static final long serialVersionUID = 3725666626083864341L;
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                Map<RenderingHints.Key, Object> rh = new HashMap<>();
+                rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+                rh.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                rh.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g2d.setRenderingHints(rh);
+                if (Main.settings.theme != Theme.System) {
+                    Area tabArea = new Area(g2d.getClip().getBounds());
+                    RoundRectangle2D roundedTab = new RoundRectangle2D.Float(
+                            g2d.getClip().getBounds().x,
+                            g2d.getClip().getBounds().y,
+                            g2d.getClip().getBounds().width - 1,
+                            g2d.getClip().getBounds().height - 1,
+                            12,
+                            12);
+                    Area roundedTabArea = new Area(roundedTab);
+                    tabArea.subtract(roundedTabArea);
+                    g2d.setColor(getTabColor());
+                    g2d.fill(roundedTabArea);
+                    g2d.setColor(getTabColor().darker());
+                    g2d.draw(roundedTabArea);
+                }
+            }
+        };
+    }
+
+    private static BetterJLabel makeBasicTabInfoLabel(String title) {
+        BetterJLabel tabInfoLabel = new BetterJLabel(title);
+        tabInfoLabel.setForeground(Main.settings.theme != Theme.System ? Main.getTextColorForBackground() : Color.BLACK);
+        tabInfoLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        return tabInfoLabel;
+    }
+
+    private static JButton makeBasicCloseButton() {
+        JButton closeTabButton = new JButton();
+        closeTabButton.setBorder(new EmptyBorder(5, 5, 5, 5));
         if (Main.settings.theme != Theme.System) {
-            setUI(flatTabbedPaneUI);
-        } else {
-            setUI(basicTabbedPaneUI);
+            closeTabButton.setBackground(getTabColor());
+            closeTabButton.setRolloverEnabled(false);
+            closeTabButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    closeTabButton.setIcon(closeHoverImage);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    closeTabButton.setIcon(closeImage);
+                }
+            });
         }
+        closeTabButton.setIcon(closeImage);
+        return closeTabButton;
+    }
+
+    public void applyThemeChange() {
+        setUI(Main.settings.theme == Theme.Modern ? flatTabbedPaneUI : basicTabbedPaneUI);
         if (windowFrame.tabbedPane.settingsTabOpen) {
             int index = indexOfTab("Settings");
             Component settingsDialog = getComponentAt(index);
@@ -605,9 +581,15 @@ public class BrowserTabbedPane extends JTabbedPane {
                 }
                 setTabComponentAt(i, generateTabPanel(windowFrame, this, windowFrame.cefApp, browser, getToolTipTextAt(i)));
             }
-            Arrays.stream(((JPanel) getTabComponentAt(i)).getComponents())
-                    .filter(component -> component instanceof JLabel).findFirst().ifPresent(component ->
-                            component.setForeground(Main.getTextColorForBackground()));
+            if (Main.settings.theme != Theme.System) {
+                Arrays.stream(((JPanel) getTabComponentAt(i)).getComponents())
+                        .filter(component -> component instanceof JLabel).findFirst()
+                        .ifPresent(component -> component.setForeground(Main.getTextColorForBackground()));
+            } else {
+                Arrays.stream(((JPanel) getTabComponentAt(i)).getComponents())
+                        .filter(component -> component instanceof JLabel).findFirst()
+                        .ifPresent(component -> component.setForeground(Color.BLACK));
+            }
         }
         SwingUtilities.invokeLater(() -> Main.downloadPanels.forEach(SwingUtilities::updateComponentTreeUI));
         windowFrame.toolBar.setFloatable(false);
@@ -615,7 +597,7 @@ public class BrowserTabbedPane extends JTabbedPane {
     }
 
     private static Color getTabColor() {
-        return Main.getTextColorForBackground() == Color.WHITE ? tabColorDarkMode : tabColorLightMode;
+        return Main.getTextColorForBackground() == Color.WHITE ? TAB_COLOR_DARK_MODE : TAB_COLOR_LIGHT_MODE;
     }
 
     private void addCefHandlers(CefApp cefApp, CefClient cefClient) {
@@ -627,5 +609,6 @@ public class BrowserTabbedPane extends JTabbedPane {
         cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, windowFrame));
         cefClient.addDragHandler(new NavixDragHandler());
         cefClient.addRequestHandler(new NavixRequestHandler());
+        cefClient.addPrintHandler(new NavixPrintHandler());
     }
 }

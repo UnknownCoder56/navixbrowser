@@ -22,12 +22,12 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>3.0</version>
+            <version>3.2.5</version>
         </dependency>
         <dependency>
             <groupId>me.friwi</groupId>
             <artifactId>jcefmaven</artifactId>
-            <version>109.1.11</version>
+            <version>116.0.19.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>

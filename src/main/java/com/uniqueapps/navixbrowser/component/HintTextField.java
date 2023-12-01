@@ -7,7 +7,8 @@ import java.util.Map;
 
 public class HintTextField extends JTextField {
 
-    private final String hint;
+	private static final long serialVersionUID = 7508831927835906825L;
+	private final String hint;
 
     public HintTextField(String hint, int columns) {
         super(columns);
@@ -17,7 +18,7 @@ public class HintTextField extends JTextField {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        if (getText().length() == 0) {
+        if (getText().isEmpty()) {
             int h = getHeight();
             Map<RenderingHints.Key, Object> rh = new HashMap<>();
             rh.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);

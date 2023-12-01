@@ -1,5 +1,32 @@
 package com.uniqueapps.navixbrowser;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JFrame;
+import javax.swing.LookAndFeel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import org.cef.CefApp;
+import org.cef.CefSettings;
+import org.cef.OS;
+
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
@@ -14,31 +41,19 @@ import com.uniqueapps.navixbrowser.object.DownloadObject;
 import com.uniqueapps.navixbrowser.object.DownloadObject.DownloadAction;
 import com.uniqueapps.navixbrowser.object.DownloadObject.DownloadState;
 import com.uniqueapps.navixbrowser.object.UserSettings;
+
 import me.friwi.jcefmaven.CefAppBuilder;
 import me.friwi.jcefmaven.CefInitializationException;
 import me.friwi.jcefmaven.UnsupportedPlatformException;
-import org.cef.CefApp;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.*;
-import java.nio.file.Files;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Main {
 
     public static String VERSION = "2.0";
-    public static int DEBUG_PORT = 8090;
+    public static int DEBUG_PORT;
 
     public static File userAppData = new File(".", "AppData");
     public static File cache = new File(".", "cache");
-    public static File settingsFile = new File(userAppData, "settings");
     public static UserSettings settings = new UserSettings();
-
     public static File downloadsFile = new File(userAppData, "downloads");
     public static List<DownloadObject> downloads = new ArrayList<>();
     public static List<DownloadObjectPanel> downloadPanels = new ArrayList<>();
@@ -68,6 +83,7 @@ public class Main {
         userAppData.mkdir();
         cache.mkdir();
         loadSettings();
+        DEBUG_PORT = settings.debugPort;
         prepareThemes();
         try {
             switch (Main.settings.theme) {
@@ -84,19 +100,19 @@ public class Main {
         }
 
         downloadWindow = new RuntimeDownloadHandler();
-		CefApp cefApp = createCefApp();
-		SwingUtilities.invokeLater(() -> start(cefApp));
+        CefApp cefApp = createCefApp();
+        SwingUtilities.invokeLater(() -> start(cefApp));
     }
 
     public static void start(CefApp cefApp) {
         try {
-            var window = new BrowserWindow("navix://home", settings.OSR, false, cefApp);
+            var window = new BrowserWindow(settings.newTabURL, settings.OSR, false, cefApp);
             loadData(window);
             window.setSize(600, 400);
             window.setMinimumSize(new Dimension(400, 300));
             window.setTitle("Navix");
             window.setLocationRelativeTo(null);
-            window.setExtendedState(Main.settings.launchMaximized ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
+            window.setExtendedState(settings.launchMaximized ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
             window.setVisible(true);
         } catch (IOException e) {
             e.printStackTrace();
@@ -104,17 +120,7 @@ public class Main {
     }
 
     public static void loadSettings() {
-        try {
-            settingsFile.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(settingsFile))) {
-            settings = (UserSettings) ois.readObject();
-        } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-        }
+        settings.load();
     }
 
     @SuppressWarnings("unchecked")
@@ -135,17 +141,12 @@ public class Main {
                 downloadPanels.add(new DownloadObjectPanel(browserWindow, downloadObject));
             });
         } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
             refreshDownloads();
         }
     }
 
     public static void refreshSettings() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(settingsFile))) {
-            oos.writeObject(settings);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        settings.save();
     }
 
     public static void refreshDownloads() {
@@ -163,8 +164,6 @@ public class Main {
 
         CefAppBuilder builder = new CefAppBuilder();
         builder.getCefSettings().windowless_rendering_enabled = settings.OSR;
-        builder.getCefSettings().user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.2704.106 Safari/537.36 Navix/"
-                + VERSION;
         builder.getCefSettings().user_agent_product = "Navix " + VERSION;
         builder.getCefSettings().cache_path = cache.getAbsolutePath();
         builder.getCefSettings().remote_debugging_port = DEBUG_PORT;
@@ -172,9 +171,26 @@ public class Main {
         if (!Main.settings.HAL)
             builder.addJcefArgs("--disable-gpu");
         builder.addJcefArgs("--enable-media-stream");
+        builder.addJcefArgs(Main.settings.args);
         builder.setAppHandler(new NavixAppHandler());
         try {
-            return builder.build();
+            CefApp cefApp = builder.build();
+            CefSettings cefSettings = builder.getCefSettings();
+            if (OS.isLinux()) {
+                cefSettings.user_agent = "Mozilla/5.0 (Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/" + cefApp.getVersion().getChromeVersion() + " Safari/537.36 Navix/"
+                        + VERSION;
+            } else if (OS.isWindows()) {
+                cefSettings.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; WOW64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/" + cefApp.getVersion().getChromeVersion() + " Safari/537.36 Navix/"
+                        + VERSION;
+            } else if (OS.isMacintosh()) {
+                cefSettings.user_agent = "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/" + cefApp.getVersion().getChromeVersion() + " Safari/537.36 Navix/"
+                        + VERSION;
+            } else {
+                cefSettings.user_agent = "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/" + cefApp.getVersion().getChromeVersion() + " Safari/537.36 Navix/"
+                        + VERSION;
+            }
+            cefApp.setSettings(cefSettings);
+            return cefApp;
         } catch (IOException | InterruptedException | UnsupportedPlatformException | CefInitializationException e) {
             throw new RuntimeException(e);
         }

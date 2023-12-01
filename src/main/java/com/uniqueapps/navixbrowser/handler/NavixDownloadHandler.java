@@ -49,7 +49,7 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 	public void onDownloadUpdated(CefBrowser cefBrowser, CefDownloadItem cefDownloadItem,
 			CefDownloadItemCallback cefDownloadItemCallback) {
 		super.onDownloadUpdated(cefBrowser, cefDownloadItem, cefDownloadItemCallback);
-		Main.downloadPanels.stream().filter(downloadPanel -> downloadPanel.downloadObject.id == cefDownloadItem.getId())
+		Main.downloadPanels.stream().filter(downloadPanel -> downloadPanel.downloadObject.id == cefDownloadItem.getId() && downloadPanel.downloadObject.downloadState != DownloadState.FINISHED)
 				.findFirst().ifPresent(downloadPanel -> {
 					downloadPanel.progressBar.setValue(cefDownloadItem.getPercentComplete());
 					downloadPanel.downloadSpeed.setText(getDataSize(cefDownloadItem.getCurrentSpeed()) + "/s");
@@ -58,14 +58,14 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 					downloadPanel.partDone.setText(doneBytes + " / " + totalBytes);
 				});
 		if (!Main.downloadsActionBuffer.isEmpty()) {
-			Main.downloads.stream().filter(downloadPanel -> downloadPanel.id == cefDownloadItem.getId()).findFirst()
+			Main.downloads.stream().filter(downloadObject -> downloadObject.id == cefDownloadItem.getId() && downloadObject.downloadState != DownloadState.FINISHED).findFirst()
 					.ifPresent(downloadObject -> {
 						if (Main.downloadsActionBuffer.containsKey(downloadObject)) {
 							var action = Main.downloadsActionBuffer.get(downloadObject);
 							if (action == DownloadAction.PAUSE) {
 								cefDownloadItemCallback.pause();
 								Main.downloadPanels.stream().filter(
-										downloadPanel -> downloadPanel.downloadObject.id == cefDownloadItem.getId())
+										downloadPanel -> downloadPanel.downloadObject.id == cefDownloadItem.getId() && downloadPanel.downloadObject.downloadState != DownloadState.FINISHED)
 										.findFirst()
 										.ifPresent(downloadPanel -> downloadPanel.callback = cefDownloadItemCallback);
 							} else if (action == DownloadAction.RESUME) {
@@ -79,7 +79,7 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 		}
 		if (cefDownloadItem.getPercentComplete() == 100) {
 			Main.downloadPanels.stream()
-					.filter(downloadPanel -> downloadPanel.downloadObject.id == cefDownloadItem.getId()).findFirst()
+					.filter(downloadPanel -> downloadPanel.downloadObject.id == cefDownloadItem.getId() && downloadPanel.downloadObject.downloadState != DownloadState.FINISHED).findFirst()
 					.ifPresent(downloadPanel -> {
 						downloadPanel.downloadObject.downloadState = DownloadState.FINISHED;
 						downloadPanel.progressBar.setVisible(false);
