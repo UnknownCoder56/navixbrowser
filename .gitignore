@@ -7,10 +7,10 @@
 /out
 /src/main/java/com/uniqueapps/navixbrowser/object/SECRETS.java
 /desktop.ini
-/Navix-2.0.0.exe
 /navixbrowser.iml
 /jpackage-config-linux.txt
 /jpackage-config-win.txt
+/*.exe
 /*.deb
 /*.rpm
 /testing
