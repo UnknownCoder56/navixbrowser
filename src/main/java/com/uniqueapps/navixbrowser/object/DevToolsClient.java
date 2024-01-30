@@ -58,7 +58,7 @@ public class DevToolsClient implements Runnable {
                                 .buildAsync(URI.create(browserJson.get("webSocketDebuggerUrl").getAsString()), new WebSocket.Listener() {
                                     @Override
                                     public void onOpen(WebSocket webSocket) {
-                                        
+                                        webSocket.sendText(msgJson, true);
                                     }
                                 });
                     }
