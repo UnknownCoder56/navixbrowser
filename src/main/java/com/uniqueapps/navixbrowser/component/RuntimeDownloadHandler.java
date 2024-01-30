@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -11,8 +12,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
 
+import com.uniqueapps.navixbrowser.Main;
+
 import me.friwi.jcefmaven.EnumProgress;
-import me.friwi.jcefmaven.IProgressHandler;    
+import me.friwi.jcefmaven.IProgressHandler;
 
 public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
 	
@@ -29,7 +32,7 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
         try {
             label.setIcon(new ImageIcon(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))).getScaledInstance(50, 50, BufferedImage.SCALE_SMOOTH)));
         } catch (IOException e) {
-            e.printStackTrace();
+            Main.logger.log(Level.SEVERE, "Failed to load app icon: {0}", e);
         }
         add(label, BorderLayout.CENTER);
         progressBar.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -39,7 +42,7 @@ public class RuntimeDownloadHandler extends JFrame implements IProgressHandler {
         try {
 			setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.logger.log(Level.SEVERE, "Failed to load app icon: {0}", e);
 		}
 		setResizable(false);
         setLocationRelativeTo(null);

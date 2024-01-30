@@ -12,6 +12,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
+import java.util.logging.Level;
+
+import com.uniqueapps.navixbrowser.Main;
 
 public class NavixDisplayHandler extends CefDisplayHandlerAdapter {
 
@@ -63,7 +66,7 @@ public class NavixDisplayHandler extends CefDisplayHandlerAdapter {
 					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				Main.logger.log(Level.SEVERE, "Error while updating tab title: {0}", e);
 			}
 		}
 	}

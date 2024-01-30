@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -181,10 +182,13 @@ public class SettingsPanel extends JPanel {
 							case System:
 								UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 								break;
+							case CrossPlatform:
+								UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+								break;	
 						}
 					} catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
 							 IllegalAccessException e1) {
-						throw new RuntimeException(e1);
+						Main.logger.log(Level.SEVERE, "Failed to set theme: {0}", e1);
 					}
 					SwingUtilities.updateComponentTreeUI(browserWindow);
 					browserWindow.tabbedPane.applyThemeChange();
@@ -218,12 +222,12 @@ public class SettingsPanel extends JPanel {
 							"text = @bg\n" +
 							"control = @bg");
 				} catch (IOException e) {
-					throw new RuntimeException(e);
+					Main.logger.log(Level.SEVERE, "Failed to write theme file: {0}", e);
 				}
 				try {
 					UIManager.setLookAndFeel(Main.getModernLookAndFeelForBackground(color));
 				} catch (UnsupportedLookAndFeelException e) {
-					throw new RuntimeException(e);
+					Main.logger.log(Level.SEVERE, "Failed to set theme: {0}", e);
 				}
 				SwingUtilities.updateComponentTreeUI(browserWindow);
 				browserWindow.tabbedPane.applyThemeChange();
@@ -535,7 +539,7 @@ public class SettingsPanel extends JPanel {
         			debugPortField.setText(Integer.toString(Main.settings.debugPort));
         			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Not a valid port number! Must be between 0 and 65535."));
         		}
-        	} catch (Exception e) {
+        	} catch (NumberFormatException e) {
         		debugPortField.setText(Integer.toString(Main.settings.debugPort));
         		SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(browserWindow, "Not a valid port number!"));
         	}

@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -126,7 +127,7 @@ public class BrowserWindow extends JFrame {
 		try {
 			setIconImage(ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/navix.png"))));
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			Main.logger.log(Level.SEVERE, "Failed to load app icon: {0}", e.getMessage());
 		}
 
 		homeButton = new JButton();
@@ -265,7 +266,7 @@ public class BrowserWindow extends JFrame {
 					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/menu-bar.png")))
 							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			Main.logger.log(Level.SEVERE, "Failed to load toolbar icons: {0}", e.getMessage());
 		}
 
 		homeButton.addActionListener(l -> {
@@ -414,8 +415,8 @@ public class BrowserWindow extends JFrame {
 			try {
 				bookmarkButton.setIcon(new ImageIcon(
 						ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + bookmark.getValue()))));
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			} catch (IOException e) {
+				Main.logger.log(Level.SEVERE, "Failed to load bookmark icon: {0}", e.getMessage());
 			}
 			bookmarkButton.addActionListener(l -> tabbedPane.getSelectedBrowser().loadURL(bookmark.getValue()));
 			JPopupMenu popup = new JPopupMenu();
@@ -517,7 +518,7 @@ public class BrowserWindow extends JFrame {
 		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(bookmarkFile))) {
 			oos.writeObject(bookmarks);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.logger.log(Level.SEVERE, "Failed to save bookmarks: {0}", e.getMessage());
 		}
 		bookmarksPanel.removeAll();
 		for (var bookmark : bookmarks.entrySet()) {
@@ -536,8 +537,8 @@ public class BrowserWindow extends JFrame {
 			try {
 				bookmarkButton.setIcon(new ImageIcon(
 						ImageIO.read(new URL("https://www.google.com/s2/favicons?domain=" + bookmark.getValue()))));
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			} catch (IOException e) {
+				Main.logger.log(Level.SEVERE, "Failed to load bookmark icon: {0}", e.getMessage());
 			}
 			bookmarkButton.addActionListener(l -> tabbedPane.getSelectedBrowser().loadURL(bookmark.getValue()));
 			JPopupMenu popup = new JPopupMenu();
@@ -592,8 +593,8 @@ public class BrowserWindow extends JFrame {
 				} else {
 					suggestionsPopupMenu.setVisible(false);
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (IOException e) {
+				Main.logger.log(Level.SEVERE, "Failed to get search suggestions: {0}", e.getMessage());
 			}
 		}
 	}

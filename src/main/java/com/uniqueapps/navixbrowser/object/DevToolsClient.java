@@ -1,11 +1,5 @@
 package com.uniqueapps.navixbrowser.object;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.uniqueapps.navixbrowser.Main;
-import org.cef.browser.CefBrowser;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +8,14 @@ import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
+import java.util.logging.Level;
+
+import org.cef.browser.CefBrowser;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.uniqueapps.navixbrowser.Main;
 
 public class DevToolsClient implements Runnable {
 
@@ -56,14 +58,14 @@ public class DevToolsClient implements Runnable {
                                 .buildAsync(URI.create(browserJson.get("webSocketDebuggerUrl").getAsString()), new WebSocket.Listener() {
                                     @Override
                                     public void onOpen(WebSocket webSocket) {
-                                        webSocket.sendText(msgJson, true);
+                                        
                                     }
                                 });
                     }
                 });
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            Main.logger.log(Level.SEVERE, "Failed to connect to DevTools: {0}", e);
         }
     }
 }

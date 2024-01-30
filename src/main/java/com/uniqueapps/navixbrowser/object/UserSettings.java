@@ -1,5 +1,7 @@
 package com.uniqueapps.navixbrowser.object;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import com.uniqueapps.navixbrowser.Main.Theme;
@@ -30,6 +32,8 @@ public class UserSettings {
 		prefs.putBoolean("enableAdBlock", enableAdBlock);
 		prefs.putBoolean("enableTrackerBlock", enableTrackerBlock);
 		prefs.putBoolean("enableSafeBrowsing", enableSafeBrowsing);
+		String argsString = Arrays.toString(args);
+		prefs.put("args", argsString.substring(1, argsString.length() - 1));
 		prefs.putBoolean("forceDarkMode", forceDarkMode);
 		prefs.putBoolean("enableSearchSuggestions", enableSearchSuggestions);
 		prefs.put("newTabURL", newTabURL);
@@ -45,6 +49,10 @@ public class UserSettings {
 		enableAdBlock = prefs.getBoolean("enableAdBlock", enableAdBlock);
 		enableTrackerBlock = prefs.getBoolean("enableTrackerBlock", enableTrackerBlock);
 		enableSafeBrowsing = prefs.getBoolean("enableSafeBrowsing", enableSafeBrowsing);
+		String argsString = Arrays.toString(args);
+		java.util.List<String> argsList = new java.util.ArrayList<>(List.of(prefs.get("args", argsString.substring(1, argsString.length() - 1)).split(",")));
+		argsList.replaceAll(String::strip);
+		args = argsList.toArray(String[]::new);
 		forceDarkMode = prefs.getBoolean("forceDarkMode", forceDarkMode);
 		enableSearchSuggestions = prefs.getBoolean("enableSearchSuggestions", enableSearchSuggestions);
 		newTabURL = prefs.get("newTabURL", newTabURL);

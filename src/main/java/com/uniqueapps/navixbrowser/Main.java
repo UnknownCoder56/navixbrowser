@@ -16,6 +16,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javax.swing.JFrame;
 import javax.swing.LookAndFeel;
@@ -48,13 +52,13 @@ import me.friwi.jcefmaven.UnsupportedPlatformException;
 
 public class Main {
 
-    public static String VERSION = "2.0";
+    public static final String VERSION = "2.0";
     public static int DEBUG_PORT;
 
     public static File userAppData = new File(".", "AppData");
     public static File cache = new File(".", "cache");
     public static UserSettings settings = new UserSettings();
-    public static File downloadsFile = new File(userAppData, "downloads");
+    public static File downloadsFile = new File(new File(".", "AppData"), "downloads");
     public static List<DownloadObject> downloads = new ArrayList<>();
     public static List<DownloadObjectPanel> downloadPanels = new ArrayList<>();
     public static Map<DownloadObject, DownloadAction> downloadsActionBuffer = new HashMap<>();
@@ -65,20 +69,29 @@ public class Main {
 
     public static Safebrowsing safebrowsing;
 
+    public static final Logger logger = Logger.getLogger(Main.class.getName());
+
     public enum Theme {
-        Modern, System
+        Modern, System, CrossPlatform
     }
 
     public static void main(String[] args) {
         try {
-            safebrowsing = new Safebrowsing.Builder(
-                    GoogleNetHttpTransport.newTrustedTransport(),
-                    GsonFactory.getDefaultInstance(),
-                    null)
-                    .setApplicationName("Navix")
-                    .build();
-        } catch (GeneralSecurityException | IOException e) {
+            FileHandler fileHandler = new FileHandler("./navix.log");
+            fileHandler.setFormatter(new SimpleFormatter());
+            logger.addHandler(fileHandler);
+        } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        try {
+            safebrowsing = new Safebrowsing.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                GsonFactory.getDefaultInstance(),
+                null)
+                .setApplicationName("Navix")
+                .build();
+        } catch (GeneralSecurityException | IOException e) {
+            logger.log(Level.SEVERE, "Failed to initialize Safebrowsing API: {0}", e.getMessage());
         }
         userAppData.mkdir();
         cache.mkdir();
@@ -93,10 +106,13 @@ public class Main {
                 case System:
                     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                     break;
+                case CrossPlatform:
+                    UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                    break;
             }
         } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
                  IllegalAccessException e) {
-            throw new RuntimeException(e);
+            logger.log(Level.SEVERE, "Failed to set LookAndFeel: {0}", e.getMessage());
         }
 
         downloadWindow = new RuntimeDownloadHandler();
@@ -115,7 +131,7 @@ public class Main {
             window.setExtendedState(settings.launchMaximized ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
             window.setVisible(true);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to create BrowserWindow: {0}", e.getMessage());
         }
     }
 
@@ -128,7 +144,9 @@ public class Main {
         try {
             downloadsFile.createNewFile();
         } catch (IOException e) {
-            e.printStackTrace();
+            if (!downloadsFile.exists()) {
+                logger.log(Level.SEVERE, "Failed to create downloads file: {0}", e.getMessage());
+            }
             refreshDownloads();
         }
 
@@ -153,7 +171,7 @@ public class Main {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(downloadsFile))) {
             oos.writeObject(downloads);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to save downloads: {0}", e.getMessage());
         }
     }
 
@@ -192,6 +210,7 @@ public class Main {
             cefApp.setSettings(cefSettings);
             return cefApp;
         } catch (IOException | InterruptedException | UnsupportedPlatformException | CefInitializationException e) {
+            logger.log(Level.SEVERE, "Failed to create CefApp: {0}", e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -206,7 +225,7 @@ public class Main {
                 Files.copy(Main.class.getResourceAsStream("/themes/FlatDarkLaf.properties"),
                         new File(themes, "FlatDarkLaf.properties").toPath());
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                logger.log(Level.SEVERE, "Failed to prepare theme files: {0}", e.getMessage());
             }
         }
         FlatLaf.registerCustomDefaultsSource(themes);
@@ -253,6 +272,7 @@ public class Main {
             String hexColor = reader.readLine().substring(6);
             return Color.decode(hexColor);
         } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to read theme file: {0}", e.getMessage());
             throw new RuntimeException(e);
         }
     }

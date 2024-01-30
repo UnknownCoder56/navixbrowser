@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -158,6 +159,7 @@ public class BrowserTabbedPane extends JTabbedPane {
                     .read(Objects.requireNonNull(BrowserTabbedPane.class.getResourceAsStream("/images/cross-hover.png")))
                     .getScaledInstance(20, 20, BufferedImage.SCALE_SMOOTH));
         } catch (IOException e) {
+            Main.logger.log(Level.SEVERE, "Failed to load button images: {0}", e.getMessage());
             throw new RuntimeException(e);
         }
     }

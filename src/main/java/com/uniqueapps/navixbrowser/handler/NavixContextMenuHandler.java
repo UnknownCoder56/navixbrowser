@@ -1,21 +1,13 @@
 package com.uniqueapps.navixbrowser.handler;
 
-import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.component.BrowserWindow;
-import com.uniqueapps.navixbrowser.object.TransferableImage;
-import org.cef.CefApp;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
-import org.cef.callback.CefContextMenuParams;
-import org.cef.callback.CefContextMenuParams.EditStateFlags;
-import org.cef.callback.CefContextMenuParams.MediaType;
-import org.cef.callback.CefMenuModel;
-import org.cef.handler.CefContextMenuHandlerAdapter;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.HeadlessException;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -25,6 +17,26 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.callback.CefContextMenuParams;
+import org.cef.callback.CefContextMenuParams.EditStateFlags;
+import org.cef.callback.CefContextMenuParams.MediaType;
+import org.cef.callback.CefMenuModel;
+import org.cef.handler.CefContextMenuHandlerAdapter;
+
+import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.component.BrowserWindow;
+import com.uniqueapps.navixbrowser.object.TransferableImage;
 
 public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
 
@@ -302,7 +314,7 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                                     }
                                 }
                             } catch (IOException | ExecutionException | InterruptedException e) {
-                                e.printStackTrace();
+                                Main.logger.log(Level.SEVERE, "Failed to take screenshot: {0}", e);
                             }
                         });
                         break;
@@ -340,7 +352,7 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                                     null);
                         }
                     } catch (HeadlessException | IOException e) {
-                        e.printStackTrace();
+                        Main.logger.log(Level.SEVERE, "Failed to copy image: {0}", e);
                     }
                     break;
                 case COPY_IMAGE_LINK:
@@ -359,7 +371,7 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
                                         chooser.getSelectedFile());
                             }
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            Main.logger.log(Level.SEVERE, "Failed to save image: {0}", e);
                         }
                     });
                     break;
@@ -403,7 +415,8 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
             Robot robot = new Robot();
             return robot.createScreenCapture(rectangle);
         } catch (AWTException e) {
-            throw new RuntimeException(e);
+            Main.logger.log(Level.SEVERE, "Failed to take screenshot: {0}", e);
+            return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
         }
     }
 }

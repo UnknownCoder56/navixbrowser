@@ -1,19 +1,25 @@
 package com.uniqueapps.navixbrowser.handler;
 
-import com.google.api.services.safebrowsing.v4.model.*;
-import com.uniqueapps.navixbrowser.Main;
-import com.uniqueapps.navixbrowser.object.SECRETS;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
-import org.cef.handler.CefResourceRequestHandlerAdapter;
-import org.cef.network.CefRequest;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.handler.CefResourceRequestHandlerAdapter;
+import org.cef.network.CefRequest;
+
+import com.google.api.services.safebrowsing.v4.model.GoogleSecuritySafebrowsingV4ClientInfo;
+import com.google.api.services.safebrowsing.v4.model.GoogleSecuritySafebrowsingV4FindThreatMatchesRequest;
+import com.google.api.services.safebrowsing.v4.model.GoogleSecuritySafebrowsingV4FindThreatMatchesResponse;
+import com.google.api.services.safebrowsing.v4.model.GoogleSecuritySafebrowsingV4ThreatEntry;
+import com.google.api.services.safebrowsing.v4.model.GoogleSecuritySafebrowsingV4ThreatInfo;
+import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.object.SECRETS;
 
 public class NavixResourceRequestHandler extends CefResourceRequestHandlerAdapter {
 
@@ -168,14 +174,14 @@ public class NavixResourceRequestHandler extends CefResourceRequestHandlerAdapte
                                     .setKey(SECRETS.GOOGLE_API_KEY)
                                     .execute();
 
-                    if (findThreatMatchesResponse.getMatches() != null && findThreatMatchesResponse.getMatches().size() > 0) {
+                    if (findThreatMatchesResponse.getMatches() != null && !findThreatMatchesResponse.getMatches().isEmpty()) {
                         return true;
                     }
                 }
             } catch (MalformedURLException ignored) {
 
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Main.logger.log(Level.SEVERE, "Error while checking url: {0}", e);
             }
         }
         return false;
