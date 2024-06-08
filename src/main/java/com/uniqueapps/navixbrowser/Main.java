@@ -55,10 +55,10 @@ public class Main {
     public static final String VERSION = "2.1";
     public static int DEBUG_PORT;
 
-    public static File userAppData = new File(".", "AppData");
+    public static File userAppData = new File(".", "data");
     public static File cache = new File(".", "cache");
     public static UserSettings settings = new UserSettings();
-    public static File downloadsFile = new File(new File(".", "AppData"), "downloads");
+    public static File downloadsFile = new File(userAppData, "downloads");
     public static List<DownloadObject> downloads = new ArrayList<>();
     public static List<DownloadObjectPanel> downloadPanels = new ArrayList<>();
     public static Map<DownloadObject, DownloadAction> downloadsActionBuffer = new HashMap<>();
