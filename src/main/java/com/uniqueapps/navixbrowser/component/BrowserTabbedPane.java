@@ -41,6 +41,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 
+import com.uniqueapps.navixbrowser.handler.*;
 import org.cef.CefApp;
 import org.cef.CefClient;
 import org.cef.browser.CefBrowser;
@@ -48,15 +49,6 @@ import org.cef.browser.CefBrowser;
 import com.formdev.flatlaf.ui.FlatTabbedPaneUI;
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.Main.Theme;
-import com.uniqueapps.navixbrowser.handler.NavixContextMenuHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDialogHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDisplayHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDownloadHandler;
-import com.uniqueapps.navixbrowser.handler.NavixDragHandler;
-import com.uniqueapps.navixbrowser.handler.NavixFocusHandler;
-import com.uniqueapps.navixbrowser.handler.NavixLoadHandler;
-import com.uniqueapps.navixbrowser.handler.NavixPrintHandler;
-import com.uniqueapps.navixbrowser.handler.NavixRequestHandler;
 
 public class BrowserTabbedPane extends JTabbedPane {
 
@@ -612,5 +604,6 @@ public class BrowserTabbedPane extends JTabbedPane {
         cefClient.addDragHandler(new NavixDragHandler());
         cefClient.addRequestHandler(new NavixRequestHandler());
         cefClient.addPrintHandler(new NavixPrintHandler());
+        cefClient.addLifeSpanHandler(new NavixLifeSpanHandler(windowFrame));
     }
 }
