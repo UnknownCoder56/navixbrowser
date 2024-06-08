@@ -43,52 +43,55 @@ public class NavixDialogHandler implements CefDialogHandler {
         File targetFile = new File(defaultFilePath);
 
         if (fileDialogMode != FileDialogMode.FILE_DIALOG_SAVE) {
-            chooser.setFileFilter(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    Tika tika = new Tika();
-                    return acceptFilters.stream().anyMatch(s -> {
-                        try {
-                            if (s.contains("/")) {
-                                if (s.contains("*")) {
-                                    return s.split("/")[0].equals(tika.detect(file).split("/")[0]);
-                                } else {
-                                    return s.equals(tika.detect(file));
-                                }
-                            }
-                            if (s.contains(".")) {
-                                String required = tika.detect(s);
-                                String detected = tika.detect(file);
-                                if (required.contains("*")) {
-                                    return required.split("/")[0].equals(detected.split("/")[0]);
-                                } else {
-                                    return required.equals(detected);
-                                }
-                            }
-                            if (s.contains("|")) {
-                                String[] required = s.split("\\|")[1].split(";");
-                                String detected = tika.detect(file);
-                                for (String eachRequired : required) {
-                                    String mimeRequired = tika.detect(eachRequired);
-                                    if (mimeRequired.contains("*")) {
-                                        return mimeRequired.split("/")[0].equals(detected.split("/")[0]);
+            if (!acceptFilters.isEmpty()) {
+                chooser.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File file) {
+                        Tika tika = new Tika();
+                        if (!file.isFile()) return true;
+                        return acceptFilters.stream().anyMatch(s -> {
+                            try {
+                                if (s.contains("/")) {
+                                    if (s.contains("*")) {
+                                        return s.split("/")[0].equals(tika.detect(file).split("/")[0]);
                                     } else {
-                                        return mimeRequired.equals(detected);
+                                        return s.equals(tika.detect(file));
                                     }
                                 }
+                                if (s.contains(".")) {
+                                    String required = tika.detect(s);
+                                    String detected = tika.detect(file);
+                                    if (required.contains("*")) {
+                                        return required.split("/")[0].equals(detected.split("/")[0]);
+                                    } else {
+                                        return required.equals(detected);
+                                    }
+                                }
+                                if (s.contains("|")) {
+                                    String[] required = s.split("\\|")[1].split(";");
+                                    String detected = tika.detect(file);
+                                    for (String eachRequired : required) {
+                                        String mimeRequired = tika.detect(eachRequired);
+                                        if (mimeRequired.contains("*")) {
+                                            return mimeRequired.split("/")[0].equals(detected.split("/")[0]);
+                                        } else {
+                                            return mimeRequired.equals(detected);
+                                        }
+                                    }
+                                }
+                                return false;
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
                             }
-                            return false;
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                }
+                        });
+                    }
 
-                @Override
-                public String getDescription() {
-                    return "Filter: " + acceptFilters;
-                }
-            });
+                    @Override
+                    public String getDescription() {
+                        return "Filter: " + acceptFilters;
+                    }
+                });
+            }
         }
         chooser.setCurrentDirectory(targetFile.getParentFile());
         chooser.setSelectedFile(targetFile);
