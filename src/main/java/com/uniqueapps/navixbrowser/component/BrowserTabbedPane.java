@@ -605,7 +605,7 @@ public class BrowserTabbedPane extends JTabbedPane {
     private void addCefHandlers(CefApp cefApp, CefClient cefClient) {
         cefClient.addContextMenuHandler(new NavixContextMenuHandler(cefApp, windowFrame));
         cefClient.addDialogHandler(new NavixDialogHandler(windowFrame));
-        cefClient.addDisplayHandler(new NavixDisplayHandler(windowFrame, BrowserTabbedPane.this, browserField, cefApp));
+        cefClient.addDisplayHandler(new NavixDisplayHandler(windowFrame, BrowserTabbedPane.this, browserField));
         cefClient.addDownloadHandler(new NavixDownloadHandler(windowFrame));
         cefClient.addFocusHandler(new NavixFocusHandler(windowFrame));
         cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, windowFrame));

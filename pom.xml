@@ -12,8 +12,7 @@
     <url>https://github.com/UnknownCoder56/navixbrowser</url>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -22,17 +21,22 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>3.2.5</version>
+            <version>3.4.1</version>
         </dependency>
         <dependency>
             <groupId>me.friwi</groupId>
             <artifactId>jcefmaven</artifactId>
-            <version>116.0.19.1</version>
+            <version>122.1.10</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-safebrowsing</artifactId>
             <version>v4-rev20230121-2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>2.9.2</version>
         </dependency>
     </dependencies>
 
@@ -43,8 +47,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <release>11</release>
                 </configuration>
             </plugin>
 

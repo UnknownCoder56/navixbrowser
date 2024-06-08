@@ -1,34 +1,35 @@
 package com.uniqueapps.navixbrowser.handler;
 
-import com.uniqueapps.navixbrowser.component.BrowserTabbedPane;
-import com.uniqueapps.navixbrowser.component.BrowserWindow;
-import org.cef.CefApp;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
-import org.cef.handler.CefDisplayHandlerAdapter;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Component;
 import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Level;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.handler.CefDisplayHandlerAdapter;
+
 import com.uniqueapps.navixbrowser.Main;
+import com.uniqueapps.navixbrowser.component.BrowserTabbedPane;
+import com.uniqueapps.navixbrowser.component.BrowserWindow;
 
 public class NavixDisplayHandler extends CefDisplayHandlerAdapter {
 
 	BrowserWindow windowFrame;
 	BrowserTabbedPane tabbedPane;
 	JTextField browserField;
-	CefApp cefApp;
 
-	public NavixDisplayHandler(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane, JTextField browserField,
-			CefApp cefApp) {
+	public NavixDisplayHandler(BrowserWindow windowFrame, BrowserTabbedPane tabbedPane, JTextField browserField) {
 		this.windowFrame = windowFrame;
 		this.tabbedPane = tabbedPane;
 		this.browserField = browserField;
-		this.cefApp = cefApp;
 	}
 
 	@Override

@@ -12,6 +12,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -402,7 +404,7 @@ public class NavixContextMenuHandler extends CefContextMenuHandlerAdapter {
         try {
             new URL(url).toURI();
             return true;
-        } catch (Exception e) {
+        } catch (MalformedURLException | URISyntaxException e) {
             return false;
         }
     }

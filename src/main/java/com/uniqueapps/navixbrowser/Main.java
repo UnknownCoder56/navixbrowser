@@ -52,7 +52,7 @@ import me.friwi.jcefmaven.UnsupportedPlatformException;
 
 public class Main {
 
-    public static final String VERSION = "2.0";
+    public static final String VERSION = "2.1";
     public static int DEBUG_PORT;
 
     public static File userAppData = new File(".", "AppData");

@@ -165,6 +165,11 @@ public class NavixResourceRequestHandler extends CefResourceRequestHandlerAdapte
                     if (Arrays.asList(ads).contains(host) || Arrays.asList(miners).contains(host)) {
                         return true;
                     }
+                    for (String minerFile : minersFiles) {
+                        if (request.getURL().contains(minerFile)) {
+                            return true;
+                        }
+                    }
                 }
 
                 if (Main.settings.enableSafeBrowsing) {

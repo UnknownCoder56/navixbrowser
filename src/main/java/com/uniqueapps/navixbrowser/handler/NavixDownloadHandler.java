@@ -2,7 +2,6 @@ package com.uniqueapps.navixbrowser.handler;
 
 import java.io.File;
 
-import com.uniqueapps.navixbrowser.component.DownloadsPanel;
 import org.cef.browser.CefBrowser;
 import org.cef.callback.CefBeforeDownloadCallback;
 import org.cef.callback.CefDownloadItem;
@@ -12,8 +11,8 @@ import org.cef.handler.CefDownloadHandlerAdapter;
 import com.uniqueapps.navixbrowser.Main;
 import com.uniqueapps.navixbrowser.component.BrowserWindow;
 import com.uniqueapps.navixbrowser.component.DownloadObjectPanel;
+import com.uniqueapps.navixbrowser.component.DownloadsPanel;
 import com.uniqueapps.navixbrowser.object.DownloadObject;
-import com.uniqueapps.navixbrowser.object.DownloadObject.DownloadAction;
 import com.uniqueapps.navixbrowser.object.DownloadObject.DownloadState;
 
 public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
@@ -62,16 +61,20 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 					.ifPresent(downloadObject -> {
 						if (Main.downloadsActionBuffer.containsKey(downloadObject)) {
 							var action = Main.downloadsActionBuffer.get(downloadObject);
-							if (action == DownloadAction.PAUSE) {
-								cefDownloadItemCallback.pause();
-								Main.downloadPanels.stream().filter(
+							switch (action) {
+								case PAUSE:
+									cefDownloadItemCallback.pause();
+									Main.downloadPanels.stream().filter(
 										downloadPanel -> downloadPanel.downloadObject.id == cefDownloadItem.getId() && downloadPanel.downloadObject.downloadState != DownloadState.FINISHED)
 										.findFirst()
 										.ifPresent(downloadPanel -> downloadPanel.callback = cefDownloadItemCallback);
-							} else if (action == DownloadAction.RESUME) {
-								cefDownloadItemCallback.resume();
-							} else if (action == DownloadAction.CANCEL) {
-								cefDownloadItemCallback.cancel();
+									break;
+								case RESUME:
+									cefDownloadItemCallback.resume();
+									break;
+								case CANCEL:
+									cefDownloadItemCallback.cancel();
+									break;
 							}
 							Main.downloadsActionBuffer.remove(downloadObject);
 						}
