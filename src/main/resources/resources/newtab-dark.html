@@ -7,22 +7,12 @@
 	<link rel="stylesheet" type="text/css" href="./style-dark.css">
 	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<script>
-        var ImgAPIs = [
-        	"url('https://picsum.photos/1920/1080')",
-        	"url('https://source.unsplash.com/1920x1080/?nature')",
-        	"url('https://source.unsplash.com/1920x1080/?landscape')",
-        	"url('https://source.unsplash.com/1920x1080/?space')",
-        	"url('https://source.unsplash.com/1920x1080/?nasa')",
-        	"url('https://source.unsplash.com/1920x1080/?earth')",
-        	"url('https://source.unsplash.com/1920x1080/?soil')",
-        	"url('https://source.unsplash.com/1920x1080/?green-energy')",
-        	"url('https://source.unsplash.com/1920x1080/?natural')",
-        	"url('https://source.unsplash.com/1920x1080/?environmental')",
-        	"url('https://source.unsplash.com/1920x1080/?trees')",
-        	"url('https://source.unsplash.com/1920x1080/?travel')",
-        ]
+		const ImgAPIs = [
+			"url('https://picsum.photos/1920/1080?random')",
+			"url('https://bingw.jasonzeng.dev/?index=random')"
+		];
 
-        function setBackgroundImage() {
+		function setBackgroundImage() {
             document.documentElement.style.backgroundSize = "auto";
             document.documentElement.style.backgroundImage = ImgAPIs[Math.floor(Math.random() * ImgAPIs.length)];
         }
