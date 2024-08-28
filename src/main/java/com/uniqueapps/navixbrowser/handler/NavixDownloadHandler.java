@@ -24,7 +24,7 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 	}
 	
 	@Override
-	public void onBeforeDownload(CefBrowser cefBrowser, CefDownloadItem cefDownloadItem, String suggestedFileName,
+	public boolean onBeforeDownload(CefBrowser cefBrowser, CefDownloadItem cefDownloadItem, String suggestedFileName,
 			CefBeforeDownloadCallback cefBeforeDownloadCallback) {
 		super.onBeforeDownload(cefBrowser, cefDownloadItem, suggestedFileName, cefBeforeDownloadCallback);
 		var downloadObject = new DownloadObject(cefDownloadItem.getId(), suggestedFileName, cefDownloadItem.getURL(),
@@ -42,6 +42,7 @@ public class NavixDownloadHandler extends CefDownloadHandlerAdapter {
 		cefBeforeDownloadCallback.Continue(
 				new File(new File(System.getProperty("user.home", "Downloads")), suggestedFileName).getAbsolutePath(),
 				true);
+		return true;
 	}
 
 	@Override

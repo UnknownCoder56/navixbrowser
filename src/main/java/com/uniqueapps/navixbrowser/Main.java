@@ -57,8 +57,9 @@ public class Main {
 
     public static File userAppData = new File(".", "data");
     public static File cache = new File(".", "cache");
-    public static UserSettings settings = new UserSettings();
     public static File downloadsFile = new File(userAppData, "downloads");
+    public static File logFile = new File(".", "navix.log");
+    public static UserSettings settings = new UserSettings();
     public static List<DownloadObject> downloads = new ArrayList<>();
     public static List<DownloadObjectPanel> downloadPanels = new ArrayList<>();
     public static Map<DownloadObject, DownloadAction> downloadsActionBuffer = new HashMap<>();
@@ -77,6 +78,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
+            logFile.createNewFile();
             FileHandler fileHandler = new FileHandler("./navix.log");
             fileHandler.setFormatter(new SimpleFormatter());
             logger.addHandler(fileHandler);
@@ -122,7 +124,7 @@ public class Main {
 
     public static void start(CefApp cefApp) {
         try {
-            var window = new BrowserWindow(settings.newTabURL, settings.OSR, false, cefApp);
+            var window = new BrowserWindow(settings.OSR, false, cefApp);
             loadData(window);
             window.setSize(600, 400);
             window.setMinimumSize(new Dimension(400, 300));
@@ -185,6 +187,7 @@ public class Main {
         builder.getCefSettings().user_agent_product = "Navix " + VERSION;
         builder.getCefSettings().cache_path = cache.getAbsolutePath();
         builder.getCefSettings().remote_debugging_port = DEBUG_PORT;
+        builder.getCefSettings().log_file = logFile.getAbsolutePath();
         builder.setProgressHandler(downloadWindow);
         if (!Main.settings.HAL)
             builder.addJcefArgs("--disable-gpu");

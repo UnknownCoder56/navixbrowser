@@ -31,7 +31,9 @@ public class NavixDialogHandler implements CefDialogHandler {
 
     @Override
     public boolean onFileDialog(CefBrowser cefBrowser, FileDialogMode fileDialogMode, String title,
-            String defaultFilePath, Vector<String> acceptFilters, CefFileDialogCallback cefFileDialogCallback) {
+                                String defaultFilePath, Vector<String> acceptFilters,
+                                Vector<String> acceptExtensions, Vector<String> acceptDescriptions,
+                                CefFileDialogCallback cefFileDialogCallback) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException

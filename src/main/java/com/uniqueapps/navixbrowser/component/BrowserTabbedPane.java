@@ -19,14 +19,11 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -57,8 +54,6 @@ public class BrowserTabbedPane extends JTabbedPane {
     JButton homeButton, forwardNav, backwardNav, reloadButton;
     JTextField browserField;
     public static Map<Component, CefBrowser> browserComponentMap = new HashMap<>();
-    private static final ImageIcon closeImage;
-    private static final ImageIcon closeHoverImage;
 
     private static final Color TAB_COLOR_DARK_MODE = Color.DARK_GRAY.darker();
     private static final Color TAB_COLOR_LIGHT_MODE = Color.GRAY.brighter();
@@ -141,20 +136,6 @@ public class BrowserTabbedPane extends JTabbedPane {
             };
         }
     };
-
-    static {
-        try {
-            closeImage = new ImageIcon(ImageIO
-                    .read(Objects.requireNonNull(BrowserTabbedPane.class.getResourceAsStream("/images/cross.png")))
-                    .getScaledInstance(20, 20, BufferedImage.SCALE_SMOOTH));
-            closeHoverImage = new ImageIcon(ImageIO
-                    .read(Objects.requireNonNull(BrowserTabbedPane.class.getResourceAsStream("/images/cross-hover.png")))
-                    .getScaledInstance(20, 20, BufferedImage.SCALE_SMOOTH));
-        } catch (IOException e) {
-            Main.logger.log(Level.SEVERE, "Failed to load button images: {0}", e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
 
     public BrowserTabbedPane(BrowserWindow windowFrame, JButton homeButton, JButton forwardNav,
                              JButton backwardNav, JButton reloadButton, JButton addBookmarkButton, JTextField browserField, JTextField browserSearchField) {
@@ -532,24 +513,12 @@ public class BrowserTabbedPane extends JTabbedPane {
     }
 
     private static JButton makeBasicCloseButton() {
-        JButton closeTabButton = new JButton();
+        IconButton closeTabButton = new IconButton('\ue8bb');
+        closeTabButton.setFont(closeTabButton.getFont().deriveFont(12f));
         closeTabButton.setBorder(new EmptyBorder(5, 5, 5, 5));
         if (Main.settings.theme != Theme.System) {
             closeTabButton.setBackground(getTabColor());
-            closeTabButton.setRolloverEnabled(false);
-            closeTabButton.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    closeTabButton.setIcon(closeHoverImage);
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    closeTabButton.setIcon(closeImage);
-                }
-            });
         }
-        closeTabButton.setIcon(closeImage);
         return closeTabButton;
     }
 
@@ -602,7 +571,7 @@ public class BrowserTabbedPane extends JTabbedPane {
         cefClient.addFocusHandler(new NavixFocusHandler(windowFrame));
         cefClient.addLoadHandler(new NavixLoadHandler(forwardNav, backwardNav, windowFrame));
         cefClient.addDragHandler(new NavixDragHandler());
-        cefClient.addRequestHandler(new NavixRequestHandler());
+        cefClient.addRequestHandler(new NavixRequestHandler(windowFrame));
         cefClient.addPrintHandler(new NavixPrintHandler());
         cefClient.addLifeSpanHandler(new NavixLifeSpanHandler(windowFrame));
     }

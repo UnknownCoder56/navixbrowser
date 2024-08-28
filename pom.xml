@@ -26,7 +26,7 @@
         <dependency>
             <groupId>me.friwi</groupId>
             <artifactId>jcefmaven</artifactId>
-            <version>122.1.10</version>
+            <version>126.2.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>

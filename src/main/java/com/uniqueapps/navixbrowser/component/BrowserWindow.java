@@ -17,7 +17,6 @@ import java.awt.event.ContainerAdapter;
 import java.awt.event.ContainerEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,20 +37,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JProgressBar;
-import javax.swing.JSplitPane;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import org.cef.CefApp;
@@ -73,13 +59,13 @@ public class BrowserWindow extends JFrame {
 	public final CefApp cefApp;
 	private final JTextField browserAddressField;
 	private final JTextField browserSearchField;
-	private final JButton homeButton;
-	private final JButton forwardNav;
-	private final JButton backwardNav;
-	private final JButton reloadButton;
-	private final JButton addTabButton;
-	private final JButton addBookmarkButton;
-	private final JButton contextMenuButton;
+	private final IconButton homeButton;
+	private final IconButton forwardNav;
+	private final IconButton backwardNav;
+	private final IconButton reloadButton;
+	private final IconButton addTabButton;
+	private final IconButton addBookmarkButton;
+	private final IconButton contextMenuButton;
 	public final JProgressBar loadBar;
 	public final BrowserTabbedPane tabbedPane;
 	public final JSplitPane splitPane;
@@ -98,7 +84,7 @@ public class BrowserWindow extends JFrame {
 	JPanel bookmarksPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 3, 3));
 
 	@SuppressWarnings("unchecked")
-	public BrowserWindow(String startURL, boolean useOSR, boolean isTransparent, CefApp cefAppX) throws IOException {
+	public BrowserWindow(boolean useOSR, boolean isTransparent, CefApp cefAppX) throws IOException {
 
 		File resources = new File(".", "resources");
 		if (resources.mkdir()) {
@@ -130,13 +116,13 @@ public class BrowserWindow extends JFrame {
 			Main.logger.log(Level.SEVERE, "Failed to load app icon: {0}", e.getMessage());
 		}
 
-		homeButton = new JButton();
-		backwardNav = new JButton();
-		forwardNav = new JButton();
-		reloadButton = new JButton();
-		addTabButton = new JButton();
-		addBookmarkButton = new JButton();
-		contextMenuButton = new JButton();
+		homeButton = new IconButton('\uea8a');
+		backwardNav = new IconButton('\ue830');
+		forwardNav = new IconButton('\uea47');
+		reloadButton = new IconButton('\ue72c');
+		addTabButton = new IconButton('\uf8aa');
+		addBookmarkButton = new IconButton('\ue8a4');
+		contextMenuButton = new IconButton('\ue700');
 		loadBar = new JProgressBar();
 		splitPane = new JSplitPane();
 		tooltip = new BetterJLabel();
@@ -242,32 +228,6 @@ public class BrowserWindow extends JFrame {
 
 		backwardNav.setEnabled(false);
 		forwardNav.setEnabled(false);
-
-		try {
-			homeButton.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/home.png")))
-							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
-			backwardNav.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/left-arrow.png")))
-							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
-			forwardNav.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/right-arrow.png")))
-							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
-			reloadButton.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/reload.png")))
-							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
-			addTabButton.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/add.png")))
-							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
-			addBookmarkButton.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/bookmark.png")))
-							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
-			contextMenuButton.setIcon(new ImageIcon(
-					ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/images/menu-bar.png")))
-							.getScaledInstance(18, 18, BufferedImage.SCALE_SMOOTH)));
-		} catch (IOException e) {
-			Main.logger.log(Level.SEVERE, "Failed to load toolbar icons: {0}", e.getMessage());
-		}
 
 		homeButton.addActionListener(l -> {
 			if (tabbedPane.getSelectedBrowser() != null) {
@@ -562,7 +522,7 @@ public class BrowserWindow extends JFrame {
 	private void updateSuggestions() {
 		if (Main.settings.enableSearchSuggestions) {
 			String searchString = browserAddressField.getText();
-			if (searchString.trim().length() == 0) {
+			if (searchString.trim().isEmpty()) {
 				suggestionsPopupMenu.setVisible(false);
 				return;
 			}
@@ -585,7 +545,7 @@ public class BrowserWindow extends JFrame {
 				});
 				suggestionsPopupMenu.revalidate();
 				suggestionsPopupMenu.repaint();
-				if (jsonArray.size() > 0) {
+				if (!jsonArray.isEmpty()) {
 					if (!suggestionsPopupMenu.isVisible()) {
 						suggestionsPopupMenu.setPopupSize(browserAddressField.getWidth(), 300);
 						suggestionsPopupMenu.show(browserAddressField, 0, browserAddressField.getHeight());
