@@ -80,9 +80,22 @@ java -jar target/navixbrowser-2.0-jar-with-dependencies.jar
 ### Google Safe Browsing Setup
 To enable Safe Browsing protection:
 
-1. Obtain a Google Safe Browsing API key from the [Google Cloud Console](https://console.cloud.google.com/)
-2. Replace `YOUR_GOOGLE_API_KEY_HERE` in `src/main/java/com/uniqueapps/navixbrowser/object/SECRETS.java`
-3. Rebuild the project
+1. **Get API Key**: 
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the "Safe Browsing API"
+   - Create credentials (API Key)
+
+2. **Configure Navix**:
+   ```bash
+   # Copy the template file
+   cp SECRETS.java.template src/main/java/com/uniqueapps/navixbrowser/object/SECRETS.java
+   
+   # Edit the file and replace YOUR_GOOGLE_API_KEY_HERE with your actual API key
+   # Never commit this file to version control!
+   ```
+
+3. **Rebuild**: `mvn clean package`
 
 ### Settings Configuration
 The browser stores settings in the system preferences. You can configure:
@@ -194,6 +207,31 @@ Contributions are welcome! Please follow these guidelines:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Troubleshooting
+
+### Common Issues
+
+#### Build Errors
+- **"cannot find symbol: class SECRETS"**: Copy `SECRETS.java.template` to the correct location (see Google Safe Browsing Setup)
+- **"Java version not supported"**: Ensure you have Java 11 or higher installed
+- **Maven build fails**: Try `mvn clean` first, then `mvn package`
+
+#### Runtime Issues
+- **Browser won't start**: Check Java version and ensure all dependencies are available
+- **Blank pages**: Verify internet connection and try disabling ad blocking temporarily
+- **Performance issues**: Try disabling hardware acceleration (HAL) in settings
+
+#### Safe Browsing Not Working
+- Verify your Google API key is correct
+- Check that the Safe Browsing API is enabled in Google Cloud Console
+- Ensure you have internet connectivity
+
+### Getting Help
+If you encounter issues not covered here:
+1. Check existing [GitHub Issues](https://github.com/UnknownCoder56/navixbrowser/issues)
+2. Search [GitHub Discussions](https://github.com/UnknownCoder56/navixbrowser/discussions)
+3. Create a new issue with detailed information about your problem
 
 ## Support
 
