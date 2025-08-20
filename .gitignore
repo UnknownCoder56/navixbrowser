@@ -5,6 +5,7 @@
 /.idea
 /.vscode
 /out
+# Secrets file containing API keys - use SECRETS.java.template as reference
 /src/main/java/com/uniqueapps/navixbrowser/object/SECRETS.java
 /desktop.ini
 /navixbrowser.iml
